@@ -16,13 +16,14 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # This obviously ensures the permissions are set correctly for when gerrit starts.
   chown -R ${GERRIT_USER} "${GERRIT_SITE}"
 
-  if [ -z "$(ls -A "$GERRIT_SITE")" ]; then
+  if ! [ -e "$GERRIT_SITE/etc" ]; then
     echo "First time initialize gerrit..."
     gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
-    #All git repositories must be removed when database is set as postgres or mysql
-    #in order to be recreated at the secondary init below.
-    #Or an execption will be thrown on secondary init.
-    [ ${#DATABASE_TYPE} -gt 0 ] && rm -rf "${GERRIT_SITE}/git"
+
+    if [ -n "$(ls -A $GERRIT_SITE/git)" ]; then
+      echo "Detected some repositories, reindexing..."
+      gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+    fi
   fi
 
   # Install external plugins
