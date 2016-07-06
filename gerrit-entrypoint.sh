@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -e
+set -xe
 
 set_gerrit_config() {
   gosu ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/gerrit.config" "$@"
@@ -18,7 +18,13 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   if ! [ -e "$GERRIT_SITE/etc" ]; then
     echo "First time initialize gerrit..."
-    gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
+    if ! gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
+       echo "... failed, retrying"
+       if ! gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
+           echo "...failed again"
+           exit 1
+       fi
+    fi
 
     if [ -n "$(ls -A $GERRIT_SITE/git)" ]; then
       echo "Detected some repositories, reindexing..."
