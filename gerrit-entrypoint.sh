@@ -9,6 +9,8 @@ set_secure_config() {
   gosu ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/secure.config" "$@"
 }
 
+first_run=false
+
 #Initialize gerrit if gerrit site dir is empty.
 #This is necessary when gerrit site is in a volume.
 if [ "$1" = "/gerrit-start.sh" ]; then
@@ -18,17 +20,14 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   if ! [ -e "$GERRIT_SITE/etc" ]; then
     echo "First time initialize gerrit..."
+    first_run=true
+
     if ! gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
        echo "... failed, retrying"
        if ! gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
            echo "...failed again"
            exit 1
        fi
-    fi
-
-    if [ -n "$(ls -A $GERRIT_SITE/git)" ]; then
-      echo "Detected some repositories, reindexing..."
-      gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
     fi
   fi
 
@@ -165,6 +164,13 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   #Section gitweb
   set_gerrit_config gitweb.cgi "/usr/share/gitweb/gitweb.cgi"
+
+  if [ "$first_run" = true ]; then
+    if [ -n "$(ls -A $GERRIT_SITE/git)" ]; then
+      echo "Detected some repositories, reindexing..."
+      gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+    fi
+  fi
 
   echo "Upgrading gerrit..."
   gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
