@@ -139,6 +139,6 @@ When this is the configured authentication method a hyperlink titled Become appe
 
    There's an [upper project](https://github.com/openfrontier/ci) which privdes sample scripts about how to use this image and a [Jenkins image](https://registry.hub.docker.com/u/openfrontier/jenkins/) to create a Gerrit-Jenkins integration environment.
 
-## Sync timezone with the host server. 
+## Sync timezone with the host server.
    `docker run -d -p 8080:8080 -p 29418:29418 -v /etc/localtime:/etc/localtime:ro openfrontier/gerrit`
 

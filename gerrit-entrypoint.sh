@@ -11,8 +11,8 @@ set_secure_config() {
 
 first_run=false
 
-#Initialize gerrit if gerrit site dir is empty.
-#This is necessary when gerrit site is in a volume.
+# Initialize gerrit if gerrit site dir is empty.
+# This is necessary when gerrit site is in a volume.
 if [ "$1" = "/gerrit-start.sh" ]; then
   # If you're mounting ${GERRIT_SITE} to your host, you this will default to root.
   # This obviously ensures the permissions are set correctly for when gerrit starts.
@@ -49,12 +49,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     echo
   done
 
-  #Customize gerrit.config
+  # Customize gerrit.config
 
-  #Section gerrit
+  # Section gerrit
   [ -z "${WEBURL}" ] || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
 
-  #Section database
+  # Section database
   if [ "${DATABASE_TYPE}" = 'postgresql' ]; then
     set_gerrit_config database.type "${DATABASE_TYPE}"
     [ -z "${DB_PORT_5432_TCP_ADDR}" ]    || set_gerrit_config database.hostname "${DB_PORT_5432_TCP_ADDR}"
@@ -64,7 +64,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${DB_ENV_POSTGRES_PASSWORD}" ] || set_secure_config database.password "${DB_ENV_POSTGRES_PASSWORD}"
   fi
 
-  #Section database
+  # Section database
   if [ "${DATABASE_TYPE}" = 'mysql' ]; then
     set_gerrit_config database.type "${DATABASE_TYPE}"
     [ -z "${DB_PORT_3306_TCP_ADDR}" ] || set_gerrit_config database.hostname "${DB_PORT_3306_TCP_ADDR}"
@@ -74,7 +74,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${DB_ENV_MYSQL_PASSWORD}" ] || set_secure_config database.password "${DB_ENV_MYSQL_PASSWORD}"
   fi
 
-  #Section ldap
+  # Section ldap
   if [ "${AUTH_TYPE}" = 'LDAP' ] || [ "${AUTH_TYPE}" = 'LDAP_BIND' ] ; then
     set_gerrit_config auth.type "${AUTH_TYPE}"
     set_gerrit_config auth.gitBasicAuth true
@@ -104,7 +104,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${LDAP_CONNECTTIMEOUT}" ]           || set_gerrit_config ldap.connectTimeout "${LDAP_CONNECTTIMEOUT}"
   fi
 
-  # section OAUTH general
+  # Section OAUTH general
   if [ "${AUTH_TYPE}" = 'OAUTH' ]  ; then
     cp -f ${GERRIT_HOME}/gerrit-oauth-provider.jar ${GERRIT_SITE}/plugins/gerrit-oauth-provider.jar
     set_gerrit_config auth.type "${AUTH_TYPE}"
@@ -122,17 +122,17 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${OAUTH_GITHUB_CLIENT_SECRET}" ]     || set_gerrit_config plugin.gerrit-oauth-provider-github-oauth.client-secret "${OAUTH_GITHUB_CLIENT_SECRET}"
   fi
 
-  # section DEVELOPMENT_BECOME_ANY_ACCOUNT
+  # Section DEVELOPMENT_BECOME_ANY_ACCOUNT
   if [ "${AUTH_TYPE}" = 'DEVELOPMENT_BECOME_ANY_ACCOUNT' ]  ; then
     set_gerrit_config auth.type "${AUTH_TYPE}"
   fi
 
-  # section container
+  # Section container
   [ -z "${JAVA_HEAPLIMIT}" ] || set_gerrit_config container.heapLimit "${JAVA_HEAPLIMIT}"
   [ -z "${JAVA_OPTIONS}" ]   || set_gerrit_config container.javaOptions "${JAVA_OPTIONS}"
   [ -z "${JAVA_SLAVE}" ]     || set_gerrit_config container.slave "${JAVA_SLAVE}"
 
-  #Section sendemail
+  # Section sendemail
   if [ -z "${SMTP_SERVER}" ]; then
     set_gerrit_config sendemail.enable false
   else
@@ -151,18 +151,18 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${SMTP_FROM}" ]            || set_gerrit_config sendemail.from "${SMTP_FROM}"
   fi
 
-  #Section user
-    [ -z "${USER_NAME}" ]             || set_gerrit_config user.name "${USER_NAME}"
-    [ -z "${USER_EMAIL}" ]            || set_gerrit_config user.email "${USER_EMAIL}"
-    [ -z "${USER_ANONYMOUS_COWARD}" ] || set_gerrit_config user.anonymousCoward "${USER_ANONYMOUS_COWARD}"
+  # Section user
+  [ -z "${USER_NAME}" ]             || set_gerrit_config user.name "${USER_NAME}"
+  [ -z "${USER_EMAIL}" ]            || set_gerrit_config user.email "${USER_EMAIL}"
+  [ -z "${USER_ANONYMOUS_COWARD}" ] || set_gerrit_config user.anonymousCoward "${USER_ANONYMOUS_COWARD}"
 
-  #Section plugins
+  # Section plugins
   set_gerrit_config plugins.allowRemoteAdmin true
 
-  #Section httpd
+  # Section httpd
   [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
 
-  #Section gitweb
+  # Section gitweb
   set_gerrit_config gitweb.cgi "/usr/share/gitweb/gitweb.cgi"
 
   if [ "$first_run" = true ]; then
@@ -186,4 +186,6 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     cat "${GERRIT_SITE}/logs/error_log"
   fi
 fi
+
 exec "$@"
+
