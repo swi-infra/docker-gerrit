@@ -166,10 +166,15 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   set_gerrit_config gitweb.cgi "/usr/share/gitweb/gitweb.cgi"
 
   if [ "$first_run" = true ]; then
-    if [ -n "$(ls -A $GERRIT_SITE/git)" ]; then
-      echo "Detected some repositories, reindexing..."
-      gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+    if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
+      echo "Empty secondary index, reindexing..."
+      REINDEX=true
     fi
+  fi
+
+  if [ -n "$REINDEX" ]; then
+    echo "Reindexing ..."
+    gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
   fi
 
   echo "Upgrading gerrit..."
