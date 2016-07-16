@@ -18,7 +18,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # This obviously ensures the permissions are set correctly for when gerrit starts.
   chown -R ${GERRIT_USER} "${GERRIT_SITE}"
 
-  if ! [ -e "$GERRIT_SITE/etc" ]; then
+  if ! [ -e "$GERRIT_SITE/etc/gerrit.config" ]; then
     echo "First time initialize gerrit..."
     first_run=true
 
