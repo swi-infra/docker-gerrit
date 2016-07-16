@@ -18,7 +18,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # This obviously ensures the permissions are set correctly for when gerrit starts.
   chown -R ${GERRIT_USER} "${GERRIT_SITE}"
 
-  if ! [ -e "$GERRIT_SITE/etc/gerrit.config" ]; then
+  if ! [ -e "${GERRIT_SITE}/etc" ]; then
     echo "First time initialize gerrit..."
     first_run=true
 
@@ -165,6 +165,13 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Section gitweb
   set_gerrit_config gitweb.cgi "/usr/share/gitweb/gitweb.cgi"
 
+  # Private key
+  if [ -e "${GERRIT_HOME}/ssh_host_key" ]; then
+      cp ${GERRIT_HOME}/ssh_host_key ${GERRIT_SITE}/etc/
+      chown ${GERRIT_USER} ${GERRIT_SITE}/etc/ssh_host_key
+  fi
+
+  # Determine if reindex is necessary
   if [ "$first_run" = true ]; then
     if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
       echo "Empty secondary index, reindexing..."
