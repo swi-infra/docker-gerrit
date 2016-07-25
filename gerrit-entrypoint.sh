@@ -168,8 +168,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Private key
   for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key; do
     if [ -e "${GERRIT_HOME}/${key}" ]; then
-        cp ${GERRIT_HOME}/${key} ${GERRIT_SITE}/etc/
-        chown ${GERRIT_USER} ${GERRIT_SITE}/etc/${key}
+      cp ${GERRIT_HOME}/${key} ${GERRIT_SITE}/etc/
+      chown ${GERRIT_USER} ${GERRIT_SITE}/etc/${key}
+
+      if [ -e "${GERRIT_SITE}/etc/ssh_host_key" ] && [[ "$key" != "ssh_host_key" ]]; then
+        rm -rf ${GERRIT_SITE}/etc/ssh_host_key
+      fi
     fi
   done
 
