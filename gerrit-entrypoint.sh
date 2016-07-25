@@ -166,10 +166,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   set_gerrit_config gitweb.cgi "/usr/share/gitweb/gitweb.cgi"
 
   # Private key
-  if [ -e "${GERRIT_HOME}/ssh_host_key" ]; then
-      cp ${GERRIT_HOME}/ssh_host_key ${GERRIT_SITE}/etc/
-      chown ${GERRIT_USER} ${GERRIT_SITE}/etc/ssh_host_key
-  fi
+  for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key; do
+    if [ -e "${GERRIT_HOME}/${key}" ]; then
+        cp ${GERRIT_HOME}/${key} ${GERRIT_SITE}/etc/
+        chown ${GERRIT_USER} ${GERRIT_SITE}/etc/${key}
+    fi
+  done
 
   # Determine if reindex is necessary
   if [ "$first_run" = true ]; then
