@@ -3,9 +3,9 @@
  This image is based on the Alpine Linux project which makes this image smaller and faster than before.
 
 ## Versions
- openfrontier/gerrit:latest -> 2.12.2
+ openfrontier/gerrit:latest -> 2.12.3
 
- openfrontier/gerrit:2.11.x -> 2.11.8
+ openfrontier/gerrit:2.11.x -> 2.11.9
 
  openfrontier/gerrit:2.10.x -> 2.10.6
 
@@ -15,6 +15,9 @@
     `docker run -d -p 8080:8080 -p 29418:29418 openfrontier/gerrit`
 
   2. Open your browser to http://<docker host url>:8080
+
+## Use HTTP authentication type
+    docker run -d -p 8080:8080 -p 29418:29418 -e AUTH_TYPE=HTTP openfrontier/gerrit
 
 ## Use another container as the gerrit site storage.
   1. Create a volume container.
@@ -57,7 +60,7 @@
     -e POSTGRES_PASSWORD=gerrit \
     -e POSTGRES_DB=reviewdb \
     -d postgres
-    #Start gerrit docker
+    #Start gerrit docker ( AUTH_TYPE=HTTP_LDAP is also supported )
     docker run \
     --name gerrit \
     --link pg-gerrit:db \
