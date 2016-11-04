@@ -3,9 +3,11 @@
  This image is based on the Alpine Linux project which makes this image smaller and faster than before.
 
 ## Versions
- openfrontier/gerrit:latest -> 2.12.3
+ openfrontier/gerrit:latest -> 2.13.1
 
- openfrontier/gerrit:2.11.x -> 2.11.9
+ openfrontier/gerrit:2.12.x -> 2.12.5
+
+ openfrontier/gerrit:2.11.x -> 2.11.10
 
  openfrontier/gerrit:2.10.x -> 2.10.6
 
@@ -45,9 +47,9 @@
 
 ## Extend this image.
   Similarly to the [Postgres](https://hub.docker.com/_/postgres/) image, if you would like to do additional configuration mid-script, add one or more
-  `*.sh` scripts under `/docker-entrypoint-init.d`. This directory is created by default. Scripts in `/docker-entrypoint-init.d` are run after gerrit
-  has been initialized, but before any of the gerrit config is customized, allowing you to programmatically override environment variables in entrypoint
-  scripts.
+  `*.sh` or `*.nohup` scripts under `/docker-entrypoint-init.d`. This directory is created by default. Scripts in `/docker-entrypoint-init.d` are run after
+  gerrit has been initialized, but before any of the gerrit config is customized, allowing you to programmatically override environment variables in entrypoint
+  scripts. `*.nohup` scripts are run into the background with nohup command.
 
 ## Run dockerized gerrit with dockerized PostgreSQL and OpenLDAP.
 #####All attributes in [gerrit.config ldap section](https://gerrit-review.googlesource.com/Documentation/config-gerrit.html#ldap) are supported.
@@ -66,10 +68,10 @@
     --link pg-gerrit:db \
     -p 8080:8080 \
     -p 29418:29418 \
-    -e WEBURL=http://<your.site.url>:8080 \
+    -e WEBURL=http://your.site.domain:8080 \
     -e DATABASE_TYPE=postgresql \
     -e AUTH_TYPE=LDAP \
-    -e LDAP_SERVER=<ldap-servername> \
+    -e LDAP_SERVER=ldap://ldap.server.address \
     -e LDAP_ACCOUNTBASE=<ldap-basedn> \
     -d openfrontier/gerrit
 
@@ -83,8 +85,8 @@
     --name gerrit \
     -p 8080:8080 \
     -p 29418:29418 \
-    -e WEBURL=http://<your.site.url>:8080 \
-    -e SMTP_SERVER=<your.smtp.server.url> \
+    -e WEBURL=http://your.site.domain:8080 \
+    -e SMTP_SERVER=smtp.server.address \
     -e SMTP_SERVER_PORT=25 \
     -e SMTP_ENCRYPTION=tls \
     -e SMTP_USER=<smtp user> \
@@ -102,9 +104,9 @@
     --name gerrit \
     -p 8080:8080 \
     -p 29418:29418 \
-    -e WEBURL=http://<your.site.url>:8080 \
+    -e WEBURL=http://your.site.domain:8080 \
     -e USER_NAME=gerrit \
-    -e USER_EMAIL=<gerrit@your.site.domain> \
+    -e USER_EMAIL=gerrit@your.site.domain \
     -d openfrontier/gerrit
 
 ## Setup OAUTH options
@@ -115,7 +117,7 @@
     -e AUTH_TYPE=OAUTH \
     -e OAUTH_ALLOW_EDIT_FULL_NAME=true \
     -e OAUTH_ALLOW_REGISTER_NEW_EMAIL=true \
-    -e OAUTH_GOOGLE_RESTRICT_DOMAIN=your.site.domain> \
+    -e OAUTH_GOOGLE_RESTRICT_DOMAIN=your.site.domain \
     -e OAUTH_GOOGLE_CLIENT_ID=1234567890 \
     -e OAUTH_GOOGLE_CLIENT_SECRET=dakjhsknksbvskewu-googlesecret \
     -e OAUTH_GOOGLE_LINK_OPENID=true \
