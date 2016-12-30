@@ -11,6 +11,10 @@ set_secure_config() {
 
 first_run=false
 
+if [ -n "${JAVA_HEAPLIMIT}" ]; then
+  JAVA_MEM_OPTIONS="-Xmx${JAVA_HEAPLIMIT}"
+fi
+
 # Initialize gerrit if gerrit site dir is empty.
 # This is necessary when gerrit site is in a volume.
 if [ "$1" = "/gerrit-start.sh" ]; then
@@ -22,9 +26,9 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     echo "First time initialize gerrit..."
     first_run=true
 
-    if ! gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
+    if ! gosu ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
        echo "... failed, retrying"
-       if ! gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
+       if ! gosu ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
            echo "...failed again"
            exit 1
        fi
@@ -195,14 +199,14 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   if [ -n "$REINDEX" ]; then
     echo "Reindexing ..."
-    gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+    gosu ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
   fi
 
   echo "Upgrading gerrit..."
-  gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
+  gosu ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
   if [ $? -eq 0 ]; then
     echo "Reindexing..."
-    gosu ${GERRIT_USER} java -jar "${GERRIT_WAR}" reindex -d "${GERRIT_SITE}"
+    gosu ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
     echo "Upgrading is OK."
   else
     echo "Something wrong..."
