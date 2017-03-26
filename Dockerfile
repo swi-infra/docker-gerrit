@@ -14,24 +14,7 @@ ENV GERRIT_INIT_ARGS ""
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
 RUN set -x \
-    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb curl
-
-# Grab gosu for easy step-down from root
-ENV GOSU_VERSION 1.9
-RUN set -x \
-    && apk add --no-cache --virtual .gosu-deps \
-        dpkg \
-        gnupg \
-    && curl -fSsL -o /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture | sed s/musl-linux-//)" \
-    && curl -fSsL -o /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture  | sed s/musl-linux-//).asc" \
-    && export GNUPGHOME="$(mktemp -d)" \
-    && echo "honor-http-proxy" > ${GNUPGHOME}/dirmngr.conf \
-    && gpg2 --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-    && gpg2 --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
-    && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
-    && chmod +x /usr/local/bin/gosu \
-    && gosu nobody true \
-    && apk del .gosu-deps
+    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb curl su-exec
 
 RUN mkdir /docker-entrypoint-init.d
 
@@ -44,6 +27,7 @@ RUN curl -fSsL https://gerrit-releases.storage.googleapis.com/gerrit-${GERRIT_VE
 ENV PLUGIN_VERSION=stable-2.13
 ENV GERRITFORGE_URL=https://gerrit-ci.gerritforge.com
 ENV GERRITFORGE_ARTIFACT_DIR=lastSuccessfulBuild/artifact/buck-out/gen/plugins
+
 #delete-project
 RUN curl -fSsL \
     ${GERRITFORGE_URL}/job/plugin-delete-project-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/delete-project/delete-project.jar \
@@ -55,8 +39,13 @@ RUN curl -fSsL \
     ${GERRITFORGE_URL}/job/plugin-events-log-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/events-log/events-log.jar \
     -o ${GERRIT_HOME}/events-log.jar
 
+#gitiles
+RUN curl -fSsL \
+    ${GERRITFORGE_URL}/job/plugin-gitiles-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/gitiles/gitiles.jar \
+    -o ${GERRIT_HOME}/gitiles.jar
+
 #oauth2 plugin
-ENV GERRIT_OAUTH_VERSION 2.13.2
+ENV GERRIT_OAUTH_VERSION 2.13.6
 
 RUN curl -fSsL \
     https://github.com/davido/gerrit-oauth-provider/releases/download/v${GERRIT_OAUTH_VERSION}/gerrit-oauth-provider.jar \
@@ -81,7 +70,7 @@ RUN chmod +x /gerrit*.sh
 
 #A directory has to be created before a volume is mounted to it.
 #So gerrit user can own this directory.
-RUN gosu ${GERRIT_USER} mkdir -p $GERRIT_SITE
+RUN su-exec ${GERRIT_USER} mkdir -p $GERRIT_SITE
 
 #Gerrit site directory is a volume, so configuration and repositories
 #can be persisted and survive image upgrades.
