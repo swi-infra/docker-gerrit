@@ -201,11 +201,9 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   done
 
   # Determine if reindex is necessary
-  if [ "$first_run" = true ]; then
-    if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
-      echo "Empty secondary index, reindexing..."
-      REINDEX=true
-    fi
+  if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
+    echo "Empty secondary index, reindexing..."
+    REINDEX=true
   fi
 
   if [ -n "$REINDEX" ]; then
