@@ -21,10 +21,19 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   chown -R ${GERRIT_USER} "${GERRIT_SITE}"
 
   # Initialize Gerrit if ${GERRIT_SITE}/etc doesn't exist.
+  SHOULD_INIT=false
   if ! [ -e "${GERRIT_SITE}/etc" ]; then
+    SHOULD_INIT=true
     echo "First time initialize gerrit..."
     first_run=true
+  fi
 
+  if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
+    SHOULD_INIT=true
+    echo "Reinit gerrit..."
+  fi
+
+  if [[ "$SHOULD_INIT" == "true" ]]; then
     if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
        echo "... failed, retrying"
        if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
