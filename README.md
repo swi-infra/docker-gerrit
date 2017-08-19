@@ -4,8 +4,8 @@
 
 ## Versions
 
- * openfrontier/gerrit:latest -> 2.13.8
- * openfrontier/gerrit:2.13.x -> 2.13.8
+ * openfrontier/gerrit:latest -> 2.14.2
+ * openfrontier/gerrit:2.13.x -> 2.13.9
  * openfrontier/gerrit:2.12.x -> 2.12.7
  * openfrontier/gerrit:2.11.x -> 2.11.10
  * openfrontier/gerrit:2.10.x -> 2.10.6
@@ -159,6 +159,10 @@
     -e OAUTH_GITLAB_ROOT_URL=http://my-gitlab.example.com/ \
     -e OAUTH_GITLAB_CLIENT_ID=abcdefg \
     -e OAUTH_GITLAB_CLIENT_SECRET=secret123 \
+    # Bitbucket OAuth
+    -e OAUTH_BITBUCKET_CLIENT_ID=abcdefg \
+    -e OAUTH_BITBUCKET_CLIENT_SECRET=secret123 \
+    -e OAUTH_BITBUCKET_FIX_LEGACY_USER_ID=true \
     -d openfrontier/gerrit
   ```
 
