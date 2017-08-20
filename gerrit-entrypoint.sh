@@ -233,14 +233,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   done
 
   # Determine if reindex is necessary
+  NEED_REINDEX=0
   if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
     echo "Empty secondary index, reindexing..."
-    REINDEX=true
-  fi
-
-  if [ -n "$REINDEX" ]; then
-    echo "Reindexing ..."
-    su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+    NEED_REINDEX=1
   fi
 
   echo "Upgrading gerrit..."
@@ -280,6 +276,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       else
         echo "Upgrading fail!"
       fi
+      NEED_REINDEX=0
     fi
   else
     echo "Something wrong..."
@@ -287,6 +284,11 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
     echo "Emptying cache ..."
     rm -rf $GERRIT_SITE/cache
+  fi
+
+  if [ ${NEED_REINDEX} -eq 1 ]; then
+    echo "Reindexing ..."
+    su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
   fi
 fi
 
