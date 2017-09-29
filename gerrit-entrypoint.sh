@@ -192,9 +192,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${SMTP_USER}" ]        || set_gerrit_config sendemail.smtpUser "${SMTP_USER}"
     [ -z "${SMTP_PASS}" ]        || set_secure_config sendemail.smtpPass "${SMTP_PASS}"
     [ -z "${SMTP_ENCRYPTION}" ]      || set_gerrit_config sendemail.smtpEncryption "${SMTP_ENCRYPTION}"
+    [ -z "${SMTP_SSL_VERIFY}" ]      || set_gerrit_config sendemail.sslVerify "${SMTP_SSL_VERIFY}"
     [ -z "${SMTP_CONNECT_TIMEOUT}" ] || set_gerrit_config sendemail.connectTimeout "${SMTP_CONNECT_TIMEOUT}"
     [ -z "${SMTP_FROM}" ]            || set_gerrit_config sendemail.from "${SMTP_FROM}"
+    [ -z "${SMTP_ALLOWED_DOMAIN}" ]  || set_gerrit_config sendemail.allowedDomain "${SMTP_ALLOWED_DOMAIN}"
   fi
+  [ -z "${SMTP_ENABLE}" ] || set_gerrit_config sendemail.enable "${SMTP_ENABLE}"
 
   # Section user
   [ -z "${USER_NAME}" ]             || set_gerrit_config user.name "${USER_NAME}"
