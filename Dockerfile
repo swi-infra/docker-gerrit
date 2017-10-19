@@ -44,6 +44,11 @@ RUN curl -fSsL \
     ${GERRITFORGE_URL}/job/plugin-gitiles-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/gitiles/gitiles.jar \
     -o ${GERRIT_HOME}/gitiles.jar
 
+#metrics-reporter-graphite
+RUN curl -fSsL \
+    ${GERRITFORGE_URL}/job/plugin-metrics-reporter-graphite-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/metrics-reporter-graphite/metrics-reporter-graphite.jar \
+    -o ${GERRIT_HOME}/metrics-reporter-graphite.jar
+
 #oauth2 plugin
 ENV GERRIT_OAUTH_VERSION 2.14.3
 

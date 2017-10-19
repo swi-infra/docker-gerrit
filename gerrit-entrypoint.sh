@@ -19,6 +19,10 @@ wait_for_database() {
   sleep 1
 }
 
+set_graphite_config() {
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/metrics-reporter-graphite.config" "$@"
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -56,6 +60,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Install external plugins
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/delete-project.jar ${GERRIT_SITE}/plugins/delete-project.jar
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/events-log.jar ${GERRIT_SITE}/plugins/events-log.jar
+  [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
 
   # Provide a way to customise this image
   echo
@@ -220,6 +225,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   # Section plugin events-log
   set_gerrit_config plugin.events-log.storeUrl "jdbc:h2:${GERRIT_SITE}/db/ChangeEvents"
+
+  # Section plugin metrics-reporter-graphite
+  [ -z "${GRAPHITE_HOST}" ]   || set_graphite_config graphite.host "${GRAPHITE_HOST}"
+  [ -z "${GRAPHITE_PORT}" ]   || set_graphite_config graphite.port "${GRAPHITE_PORT}"
+  [ -z "${GRAPHITE_PREFIX}" ] || set_graphite_config graphite.prefix "${GRAPHITE_PREFIX}"
+  [ -z "${GRAPHITE_RATE}" ]   || set_graphite_config graphite.rate "${GRAPHITE_RATE}"
 
   # Section httpd
   [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
