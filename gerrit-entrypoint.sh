@@ -9,6 +9,16 @@ set_secure_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/secure.config" "$@"
 }
 
+wait_for_database() {
+  echo "Waiting for database connection $1:$2 ..."
+  until nc -z $1 $2; do
+    sleep 1
+  done
+
+  # Wait to avoid "panic: Failed to open sql connection pq: the database system is starting up"
+  sleep 1
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -18,7 +28,7 @@ fi
 if [ "$1" = "/gerrit-start.sh" ]; then
   # If you're mounting ${GERRIT_SITE} to your host, you this will default to root.
   # This obviously ensures the permissions are set correctly for when gerrit starts.
-  chown -R ${GERRIT_USER} "${GERRIT_SITE}"
+  find "${GERRIT_SITE}/" ! -user `id -u ${GERRIT_USER}` -exec chown ${GERRIT_USER} {} \;
 
   # Initialize Gerrit if ${GERRIT_SITE}/etc doesn't exist.
   SHOULD_INIT=false
@@ -235,6 +245,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       fi
     fi
   done
+
+  case "${DATABASE_TYPE}" in
+    postgresql) wait_for_database ${DB_PORT_5432_TCP_ADDR} ${DB_PORT_5432_TCP_PORT} ;;
+    mysql)      wait_for_database ${DB_PORT_3306_TCP_ADDR} ${DB_PORT_3306_TCP_PORT} ;;
+    *)          ;;
+  esac
 
   if [[ "${JAVA_SLAVE}" != "true" ]]; then
 
