@@ -88,9 +88,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
 
   # Section auth
-  [ -z "${AUTH_TYPE}" ]                  || set_gerrit_config auth.type "${AUTH_TYPE}"
-  [ -z "${AUTH_HTTP_HEADER}" ]           || set_gerrit_config auth.httpHeader "${AUTH_HTTP_HEADER}"
-  [ -z "${AUTH_EMAIL_FORMAT}" ]          || set_gerrit_config auth.emailFormat "${AUTH_EMAIL_FORMAT}"
+  [ -z "${AUTH_TYPE}" ]                    || set_gerrit_config auth.type "${AUTH_TYPE}"
+  [ -z "${AUTH_HTTP_HEADER}" ]             || set_gerrit_config auth.httpHeader "${AUTH_HTTP_HEADER}"
+  [ -z "${AUTH_EMAIL_FORMAT}" ]            || set_gerrit_config auth.emailFormat "${AUTH_EMAIL_FORMAT}"
+  [ -z "${AUTH_USER_NAME_TO_LOWER_CASE}" ] || set_gerrit_config auth.userNameToLowerCase "${AUTH_USER_NAME_TO_LOWER_CASE}"
   if [ -z "${AUTH_GIT_BASIC_AUTH_POLICY}" ]; then
     case "${AUTH_TYPE}" in
       LDAP|LDAP_BIND)
@@ -235,63 +236,66 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     fi
   done
 
-  # Determine if reindex is necessary
-  NEED_REINDEX=0
-  if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
-    echo "Empty secondary index, reindexing..."
-    NEED_REINDEX=1
-  fi
+  if [[ "${JAVA_SLAVE}" != "true" ]]; then
 
-  echo "Upgrading gerrit..."
-  su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
-  if [ $? -eq 0 ]; then
-    GERRIT_VERSIONFILE="${GERRIT_SITE}/gerrit_version"
-
-    if [ -n "${IGNORE_VERSIONCHECK}" ]; then
-      echo "Don't perform a version check and never do a full reindex"
-      NEED_REINDEX=0
-    else
-      # check whether its a good idea to do a full upgrade
+    # Determine if reindex is necessary
+    NEED_REINDEX=0
+    if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
+      echo "Empty secondary index, reindexing..."
       NEED_REINDEX=1
-      echo "Checking version file ${GERRIT_VERSIONFILE}"
-      if [ -f "${GERRIT_VERSIONFILE}" ]; then
-        OLD_GERRIT_VER="V$(cat ${GERRIT_VERSIONFILE})"
-        GERRIT_VER="V${GERRIT_VERSION}"
-        echo " have old gerrit version ${OLD_GERRIT_VER}"
-        if [ "${OLD_GERRIT_VER}" == "${GERRIT_VER}" ]; then
-          echo " same gerrit version, no upgrade necessary ${OLD_GERRIT_VER} == ${GERRIT_VER}"
-          NEED_REINDEX=0
+    fi
+
+    echo "Upgrading gerrit..."
+    su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
+    if [ $? -eq 0 ]; then
+      GERRIT_VERSIONFILE="${GERRIT_SITE}/gerrit_version"
+
+      if [ -n "${IGNORE_VERSIONCHECK}" ]; then
+        echo "Don't perform a version check and never do a full reindex"
+        NEED_REINDEX=0
+      else
+        # check whether its a good idea to do a full upgrade
+        NEED_REINDEX=1
+        echo "Checking version file ${GERRIT_VERSIONFILE}"
+        if [ -f "${GERRIT_VERSIONFILE}" ]; then
+          OLD_GERRIT_VER="V$(cat ${GERRIT_VERSIONFILE})"
+          GERRIT_VER="V${GERRIT_VERSION}"
+          echo " have old gerrit version ${OLD_GERRIT_VER}"
+          if [ "${OLD_GERRIT_VER}" == "${GERRIT_VER}" ]; then
+            echo " same gerrit version, no upgrade necessary ${OLD_GERRIT_VER} == ${GERRIT_VER}"
+            NEED_REINDEX=0
+          else
+            echo " gerrit version mismatch #${OLD_GERRIT_VER}# != #${GERRIT_VER}#"
+          fi
         else
-          echo " gerrit version mismatch #${OLD_GERRIT_VER}# != #${GERRIT_VER}#"
-        fi 
-      else
-        echo " gerrit version file does not exist, upgrade necessary"
+          echo " gerrit version file does not exist, upgrade necessary"
+        fi
       fi
+      if [ ${NEED_REINDEX} -eq 1 ]; then
+        echo "Reindexing..."
+        su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+        if [ $? -eq 0 ]; then
+          echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
+          su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
+          su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
+          echo "${GERRIT_VERSIONFILE} written."
+        else
+          echo "Upgrading fail!"
+        fi
+        NEED_REINDEX=0
+      fi
+    else
+      echo "Something wrong..."
+      cat "${GERRIT_SITE}/logs/error_log"
+
+      echo "Emptying cache ..."
+      rm -rf $GERRIT_SITE/cache
     fi
+
     if [ ${NEED_REINDEX} -eq 1 ]; then
-      echo "Reindexing..."
+      echo "Reindexing ..."
       su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
-      if [ $? -eq 0 ]; then
-        echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
-        su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
-        su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
-        echo "${GERRIT_VERSIONFILE} written."
-      else
-        echo "Upgrading fail!"
-      fi
-      NEED_REINDEX=0
     fi
-  else
-    echo "Something wrong..."
-    cat "${GERRIT_SITE}/logs/error_log"
-
-    echo "Emptying cache ..."
-    rm -rf $GERRIT_SITE/cache
-  fi
-
-  if [ ${NEED_REINDEX} -eq 1 ]; then
-    echo "Reindexing ..."
-    su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
   fi
 fi
 
