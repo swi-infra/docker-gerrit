@@ -14,7 +14,7 @@ ENV GERRIT_INIT_ARGS ""
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
 RUN set -x \
-    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb curl su-exec
+    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb curl su-exec procmail
 
 RUN mkdir /docker-entrypoint-init.d
 
@@ -55,6 +55,11 @@ ENV GERRIT_OAUTH_VERSION 2.14.3
 RUN curl -fSsL \
     https://github.com/davido/gerrit-oauth-provider/releases/download/v${GERRIT_OAUTH_VERSION}/gerrit-oauth-provider.jar \
     -o ${GERRIT_HOME}/gerrit-oauth-provider.jar
+
+#importer
+RUN curl -fSsL \
+    ${GERRITFORGE_URL}/job/plugin-importer-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/importer/importer.jar \
+    -o ${GERRIT_HOME}/importer.jar
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
