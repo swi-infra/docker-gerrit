@@ -18,63 +18,43 @@ RUN set -x \
 
 RUN mkdir /docker-entrypoint-init.d
 
-#Download gerrit.war
+# Download gerrit.war
 RUN curl -fSsL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/lastSuccessfulBuild/artifact/gerrit/bazel-bin/release.war -o $GERRIT_WAR
-#Only for local test
+# Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
-#Download Plugins
-ENV GERRITFORGE_URL=https://gerrit-ci.gerritforge.com
-ENV GERRITFORGE_ARTIFACT_DIR=lastSuccessfulBuild/artifact/bazel-genfiles/plugins
+# Download Plugins
+COPY get-plugin.sh /
 
-#delete-project
-ENV DELPROJ_PLUGIN_VERSION=bazel-stable-2.15
-RUN curl -fSsL \
-    ${GERRITFORGE_URL}/job/plugin-delete-project-${DELPROJ_PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/delete-project/delete-project.jar \
-    -o ${GERRIT_HOME}/delete-project.jar
+# delete-project
+RUN /get-plugin.sh delete-project stable-2.15
 
-#events-log
-ENV EVENTSLOG_PLUGIN_VERSION=bazel-stable-2.15
-#This plugin is required by gerrit-trigger plugin of Jenkins.
-RUN curl -fSsL \
-    ${GERRITFORGE_URL}/job/plugin-events-log-${EVENTSLOG_PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/events-log/events-log.jar \
-    -o ${GERRIT_HOME}/events-log.jar
+# events-log
+# This plugin is required by gerrit-trigger plugin of Jenkins.
+RUN /get-plugin.sh events-log stable-2.15
 
-#gitiles
-ENV GITILES_PLUGIN_VERSION=bazel-master-stable-2.15
-RUN curl -fSsL \
-    ${GERRITFORGE_URL}/job/plugin-gitiles-${GITILES_PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/gitiles/gitiles.jar \
-    -o ${GERRIT_HOME}/gitiles.jar
+# gitiles
+RUN /get-plugin.sh gitiles master-stable-2.15
 
-#metrics-reporter-graphite
-ENV METRICSGRAPHITE_PLUGIN_VERSION=bazel-master
-RUN curl -fSsL \
-    ${GERRITFORGE_URL}/job/plugin-metrics-reporter-graphite-${METRICSGRAPHITE_PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/metrics-reporter-graphite/metrics-reporter-graphite.jar \
-    -o ${GERRIT_HOME}/metrics-reporter-graphite.jar
+# metrics-reporter-graphite
+RUN /get-plugin.sh metrics-reporter-graphite
 
-#oauth2 plugin
-ENV GERRIT_OAUTH_VERSION 2.14.3
-RUN curl -fSsL \
-    https://github.com/davido/gerrit-oauth-provider/releases/download/v${GERRIT_OAUTH_VERSION}/gerrit-oauth-provider.jar \
-    -o ${GERRIT_HOME}/gerrit-oauth-provider.jar
+# oauth2 plugin
+RUN /get-plugin.sh gerrit-oauth-provider v2.14.3 davido
 
-#importer
-ENV IMPORTER_PLUGIN_VERSION=bazel-master
-RUN curl -fSsL \
-    ${GERRITFORGE_URL}/job/plugin-importer-${IMPORTER_PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/importer/importer.jar \
-    -o ${GERRIT_HOME}/importer.jar
+# importer
+RUN /get-plugin.sh importer
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
 COPY gerrit-start.sh /
-RUN chmod +x /gerrit*.sh
 
-#A directory has to be created before a volume is mounted to it.
-#So gerrit user can own this directory.
+# A directory has to be created before a volume is mounted to it.
+# So gerrit user can own this directory.
 RUN su-exec ${GERRIT_USER} mkdir -p $GERRIT_SITE
 
-#Gerrit site directory is a volume, so configuration and repositories
-#can be persisted and survive image upgrades.
+# Gerrit site directory is a volume, so configuration and repositories
+# can be persisted and survive image upgrades.
 VOLUME $GERRIT_SITE
 
 ENTRYPOINT ["/gerrit-entrypoint.sh"]
