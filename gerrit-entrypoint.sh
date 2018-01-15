@@ -63,6 +63,16 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
 
+  # Dynamically download plugins
+  for plugin_info in ${GET_PLUGINS/,/ }; do
+    plugin_name=$(echo "${plugin_info/:/ }" | awk '{print $1}')
+    plugin_version=$(echo "${plugin_info/:/ }" | awk '{print $2}')
+    plugin_provider=$(echo "${plugin_info/:/ }" | awk '{print $3}')
+
+    /get-plugin.sh $plugin_name $plugin_version $plugin_provider
+    su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/$plugin_name.jar ${GERRIT_SITE}/plugins/$plugin_name.jar
+  done
+
   # Provide a way to customise this image
   echo
   for f in /docker-entrypoint-init.d/*; do

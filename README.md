@@ -49,11 +49,18 @@
 
     docker run -d -v ~/gerrit_volume:/var/gerrit/review_site -p 8080:8080 -p 29418:29418 openfrontier/gerrit
 
-## Install plugins on start up.
+## Download & Install plugins on start up.
 
-  When calling gerrit init --batch, it is possible to list plugins to be installed with --install-plugin=<plugin_name>. This can be done using the GERRIT_INIT_ARGS environment variable. See [Gerrit Documentation](https://gerrit-review.googlesource.com/Documentation/pgm-init.html) for more information.
+  Plugins not embedded in the image can be automatically download from [GerritForge](https://gerrit-ci.gerritforge.com/) by passing the `GET_PLUGINS` environment variable.
+  The format is a comma-separated list of entries which have the format `<name>:<version>:<provider>', where 'version' defaults to 'master' and 'provider' defaults to 'gerritforge' (only provider supported at the moment).
 
-    #Install download-commands plugin on start up
+  For instance, to install the plugins reviewers-by-blame and rabbitmq:
+
+    -e GET_PLUGINS="reviewers-by-blame:stable-2.15,rabbitmq"
+
+  When calling gerrit init --batch, it is possible to list plugins to be installed with --install-plugin=<plugin_name>. This can be done using the `GERRIT_INIT_ARGS` environment variable. See [Gerrit Documentation](https://gerrit-review.googlesource.com/Documentation/pgm-init.html) for more information.
+
+    # Install download-commands plugin on start up
     docker run -d -p 8080:8080 -p 29418:29418 -e GERRIT_INIT_ARGS='--install-plugin=download-commands' openfrontier/gerrit
 
 ## Extend this image.
