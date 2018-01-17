@@ -39,6 +39,9 @@ RUN /get-plugin.sh gitiles stable-2.15
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite
 
+# lfs
+RUN /get-plugin.sh lfs stable-2.15
+
 # oauth2 plugin
 RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.2 davido
 

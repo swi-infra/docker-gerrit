@@ -27,6 +27,10 @@ set_notedb_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/notedb.config" "$@"
 }
 
+set_lfs_config() {
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/lfs.config" "$@"
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -280,6 +284,31 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   set_notedb_config noteDb.changes.sequence true
   set_notedb_config noteDb.changes.primaryStorage "note db"
   set_notedb_config noteDb.changes.disableReviewDb true
+
+  # Section LFS
+  if [[ "${LFS_ENABLE}" == "true" ]]; then
+      echo "Enabling LFS"
+
+      set_gerrit_config lfs.plugin "lfs"
+
+      [ -z "${LFS_STORAGE}" ] || set_lfs_config storage.backend "${LFS_STORAGE}"
+
+      if [[ "${LFS_STORAGE}" == "fs" ]]; then
+          [ -z "${LFS_FS_DIRECTORY}" ]         || set_lfs_config fs.directory "${LFS_FS_DIRECTORY}"
+          [ -z "${LFS_FS_EXPIRATIONSECONDS}" ] || set_lfs_config fs.expirationSeconds "${LFS_FS_EXPIRATIONSECONDS}"
+      elif [[ "${LFS_STORAGE}" == "s3" ]]; then
+          [ -z "${LFS_S3_REGION}" ]            || set_lfs_config s3.region "${LFS_S3_REGION}"
+          [ -z "${LFS_S3_BUCKET}" ]            || set_lfs_config s3.bucket "${LFS_S3_BUCKET}"
+          [ -z "${LFS_S3_STORAGECLASS}" ]      || set_lfs_config s3.storageClass "${LFS_S3_STORAGECLASS}"
+          [ -z "${LFS_S3_EXPIRATIONSECONDS}" ] || set_lfs_config s3.expirationSeconds "${LFS_S3_EXPIRATIONSECONDS}"
+          [ -z "${LFS_S3_DISABLESSLVERIFY}" ]  || set_lfs_config s3.disableSslVerify "${LFS_S3_DISABLESSLVERIFY}"
+          [ -z "${LFS_S3_ACCESSKEY}" ]         || set_lfs_config s3.accessKey "${LFS_S3_ACCESSKEY}"
+          [ -z "${LFS_S3_SECRETKEY}" ]         || set_lfs_config s3.secretKey "${LFS_S3_SECRETKEY}"
+      else
+          echo "LFS: Unsupported storage backend '${LFS_STORAGE}'"
+          exit 1
+      fi
+  fi
 
   # Section httpd
   [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
