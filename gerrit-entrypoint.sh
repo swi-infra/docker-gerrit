@@ -64,7 +64,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
 
   # Dynamically download plugins
-  for plugin_info in ${GET_PLUGINS/,/ }; do
+  for plugin_info in ${GET_PLUGINS//,/ }; do
     plugin_name=$(echo "${plugin_info/:/ }" | awk '{print $1}')
     plugin_version=$(echo "${plugin_info/:/ }" | awk '{print $2}')
     plugin_provider=$(echo "${plugin_info/:/ }" | awk '{print $3}')
