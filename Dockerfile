@@ -6,8 +6,8 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION bazel-stable-2.15
-ENV GERRIT_USER gerrit
+ENV GERRIT_VERSION 2.14.6
+ENV GERRIT_USER gerrit2
 ENV GERRIT_INIT_ARGS ""
 
 # Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
@@ -19,7 +19,7 @@ RUN set -x \
 RUN mkdir /docker-entrypoint-init.d
 
 # Download gerrit.war
-RUN curl -fSsL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/lastSuccessfulBuild/artifact/gerrit/bazel-bin/release.war -o $GERRIT_WAR
+RUN curl -fSsL https://gerrit-releases.storage.googleapis.com/gerrit-${GERRIT_VERSION}.war -o $GERRIT_WAR
 # Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
@@ -27,23 +27,23 @@ RUN curl -fSsL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/la
 COPY get-plugin.sh /
 
 # delete-project
-RUN /get-plugin.sh delete-project stable-2.15
+RUN /get-plugin.sh delete-project stable-2.14
 
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
-RUN /get-plugin.sh events-log stable-2.15
+RUN /get-plugin.sh events-log stable-2.14
 
 # gitiles
-RUN /get-plugin.sh gitiles master-stable-2.15
+RUN /get-plugin.sh gitiles stable-2.14
 
 # metrics-reporter-graphite
-RUN /get-plugin.sh metrics-reporter-graphite
+RUN /get-plugin.sh metrics-reporter-graphite stable-2.14
 
 # oauth2 plugin
 RUN /get-plugin.sh gerrit-oauth-provider v2.14.6 davido
 
 # importer
-RUN /get-plugin.sh importer
+RUN /get-plugin.sh importer stable-2.14
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
