@@ -34,7 +34,7 @@ RUN /get-plugin.sh delete-project stable-2.15
 RUN /get-plugin.sh events-log stable-2.15
 
 # gitiles
-RUN /get-plugin.sh gitiles master-stable-2.15
+RUN /get-plugin.sh gitiles stable-2.15
 
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite
