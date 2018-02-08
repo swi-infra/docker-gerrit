@@ -40,7 +40,7 @@ RUN /get-plugin.sh gitiles stable-2.15
 RUN /get-plugin.sh metrics-reporter-graphite
 
 # oauth2 plugin
-RUN /get-plugin.sh gerrit-oauth-provider v2.14.6 davido
+RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.1 davido
 
 # importer
 RUN /get-plugin.sh importer
