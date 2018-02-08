@@ -177,6 +177,9 @@
     -e OAUTH_BITBUCKET_CLIENT_ID=abcdefg \
     -e OAUTH_BITBUCKET_CLIENT_SECRET=secret123 \
     -e OAUTH_BITBUCKET_FIX_LEGACY_USER_ID=true \
+    # Office365 OAuth
+    -e OAUTH_OFFICE365_CLIENT_ID=abcdefg \
+    -e OAUTH_OFFICE365_CLIENT_SECRET=secret123 \
     -d openfrontier/gerrit
   ```
 
