@@ -89,9 +89,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Section gerrit
   [ -z "${WEBURL}" ] || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
   [ -z "${GITHTTPURL}" ] || set_gerrit_config gerrit.gitHttpUrl "${GITHTTPURL}"
+  [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
 
-  #Section sshd
-  [ -z "${LISTEN_ADDR}" ] || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  # Section sshd
+  [ -z "${LISTEN_ADDR}" ]       || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  [ -z "${SSHD_THREADS}" ]      || set_gerrit_config sshd.threads "${SSHD_THREADS}"
+  [ -z "${SSHD_BATCHTHREADS}" ] || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
 
   # Section database
   if [ "${DATABASE_TYPE}" = 'postgresql' ]; then
@@ -261,6 +264,16 @@ if [ "$1" = "/gerrit-start.sh" ]; then
      ;;
   esac
   set_gerrit_config gitweb.type "$GITWEB_TYPE"
+
+  # Section theme (only valid for GWT UI)
+  [ -z "${THEME_BACKGROUNDCOLOR}" ]             || set_gerrit_config theme.backgroundColor "${THEME_BACKGROUNDCOLOR}"
+  [ -z "${THEME_TOPMENUCOLOR}" ]                || set_gerrit_config theme.topMenuColor "${THEME_TOPMENUCOLOR}"
+  [ -z "${THEME_TEXTCOLOR}" ]                   || set_gerrit_config theme.textColor "${THEME_TEXTCOLOR}"
+  [ -z "${THEME_TRIMCOLOR}" ]                   || set_gerrit_config theme.trimColor "${THEME_TRIMCOLOR}"
+  [ -z "${THEME_SELECTIONCOLOR}" ]              || set_gerrit_config theme.selectionColor "${THEME_SELECTIONCOLOR}"
+  [ -z "${THEME_CHANGETABLEOUTDATEDCOLOR}" ]    || set_gerrit_config theme.changeTableOutdatedColor "${THEME_CHANGETABLEOUTDATEDCOLOR}"
+  [ -z "${THEME_TABLEODDROWCOLOR}" ]            || set_gerrit_config theme.tableOddRowColor "${THEME_TABLEODDROWCOLOR}"
+  [ -z "${THEME_TABLEEVENROWCOLOR}" ]           || set_gerrit_config theme.tableEvenRowColor "${THEME_TABLEEVENROWCOLOR}"
 
   # Private key
   for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key; do
