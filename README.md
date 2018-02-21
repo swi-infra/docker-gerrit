@@ -7,7 +7,9 @@
 
 #### Alpine base
  * openfrontier/gerrit:latest -> 2.14.6
+ * openfrontier/gerrit:master-nightly -> CI builds from Gerrit master branch
  * openfrontier/gerrit:2.15-rcx -> 2.15-rc2
+ * openfrontier/gerrit:2.15-nightly -> CI builds from Gerrit 2.15 branch
  * openfrontier/gerrit:2.13.x -> 2.13.9
  * openfrontier/gerrit:2.12.x -> 2.12.7
  * openfrontier/gerrit:2.11.x -> 2.11.10

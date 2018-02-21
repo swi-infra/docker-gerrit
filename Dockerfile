@@ -6,7 +6,7 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION bazel-stable-2.15
+ENV GERRIT_VERSION bazel-master
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -27,14 +27,14 @@ RUN curl -fSsL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/la
 COPY get-plugin.sh /
 
 # delete-project
-RUN /get-plugin.sh delete-project stable-2.15
+RUN /get-plugin.sh delete-project
 
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
-RUN /get-plugin.sh events-log stable-2.15
+RUN /get-plugin.sh events-log
 
 # gitiles
-RUN /get-plugin.sh gitiles stable-2.15
+RUN /get-plugin.sh gitiles
 
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite
