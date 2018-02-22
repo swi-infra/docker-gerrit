@@ -63,6 +63,16 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
 
+  # Dynamically download plugins
+  for plugin_info in ${GET_PLUGINS//,/ }; do
+    plugin_name=$(echo "${plugin_info/:/ }" | awk '{print $1}')
+    plugin_version=$(echo "${plugin_info/:/ }" | awk '{print $2}')
+    plugin_provider=$(echo "${plugin_info/:/ }" | awk '{print $3}')
+
+    /get-plugin.sh $plugin_name $plugin_version $plugin_provider
+    su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/$plugin_name.jar ${GERRIT_SITE}/plugins/$plugin_name.jar
+  done
+
   # Provide a way to customise this image
   echo
   for f in /docker-entrypoint-init.d/*; do
@@ -79,9 +89,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Section gerrit
   [ -z "${WEBURL}" ] || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
   [ -z "${GITHTTPURL}" ] || set_gerrit_config gerrit.gitHttpUrl "${GITHTTPURL}"
+  [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
 
-  #Section sshd
-  [ -z "${LISTEN_ADDR}" ] || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  # Section sshd
+  [ -z "${LISTEN_ADDR}" ]       || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  [ -z "${SSHD_THREADS}" ]      || set_gerrit_config sshd.threads "${SSHD_THREADS}"
+  [ -z "${SSHD_BATCHTHREADS}" ] || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
 
   # Section database
   if [ "${DATABASE_TYPE}" = 'postgresql' ]; then
@@ -169,10 +182,11 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${OAUTH_ALLOW_REGISTER_NEW_EMAIL}" ] || set_gerrit_config oauth.allowRegisterNewEmail "${OAUTH_ALLOW_REGISTER_NEW_EMAIL}"
 
     # Google
-    [ -z "${OAUTH_GOOGLE_RESTRICT_DOMAIN}" ]   || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.domain "${OAUTH_GOOGLE_RESTRICT_DOMAIN}"
-    [ -z "${OAUTH_GOOGLE_CLIENT_ID}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.client-id "${OAUTH_GOOGLE_CLIENT_ID}"
-    [ -z "${OAUTH_GOOGLE_CLIENT_SECRET}" ]     || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.client-secret "${OAUTH_GOOGLE_CLIENT_SECRET}"
-    [ -z "${OAUTH_GOOGLE_LINK_OPENID}" ]       || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.link-to-existing-openid-accounts "${OAUTH_GOOGLE_LINK_OPENID}"
+    [ -z "${OAUTH_GOOGLE_RESTRICT_DOMAIN}" ]       || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.domain "${OAUTH_GOOGLE_RESTRICT_DOMAIN}"
+    [ -z "${OAUTH_GOOGLE_CLIENT_ID}" ]             || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.client-id "${OAUTH_GOOGLE_CLIENT_ID}"
+    [ -z "${OAUTH_GOOGLE_CLIENT_SECRET}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.client-secret "${OAUTH_GOOGLE_CLIENT_SECRET}"
+    [ -z "${OAUTH_GOOGLE_LINK_OPENID}" ]           || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.link-to-existing-openid-accounts "${OAUTH_GOOGLE_LINK_OPENID}"
+    [ -z "${OAUTH_GOOGLE_USE_EMAIL_AS_USERNAME}" ] || set_gerrit_config plugin.gerrit-oauth-provider-google-oauth.use-email-as-username "${OAUTH_GOOGLE_USE_EMAIL_AS_USERNAME}"
 
     # Github
     [ -z "${OAUTH_GITHUB_CLIENT_ID}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-github-oauth.client-id "${OAUTH_GITHUB_CLIENT_ID}"
@@ -187,6 +201,11 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${OAUTH_BITBUCKET_CLIENT_ID}" ]          || set_gerrit_config plugin.gerrit-oauth-provider-bitbucket-oauth.client-id "${OAUTH_BITBUCKET_CLIENT_ID}"
     [ -z "${OAUTH_BITBUCKET_CLIENT_SECRET}" ]      || set_gerrit_config plugin.gerrit-oauth-provider-bitbucket-oauth.client-secret "${OAUTH_BITBUCKET_CLIENT_SECRET}"
     [ -z "${OAUTH_BITBUCKET_FIX_LEGACY_USER_ID}" ] || set_gerrit_config plugin.gerrit-oauth-provider-bitbucket-oauth.fix-legacy-user-id "${OAUTH_BITBUCKET_FIX_LEGACY_USER_ID}"
+
+    # Office365
+    [ -z "${OAUTH_OFFICE365_USE_EMAIL_AS_USERNAME}" ] || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.use-email-as-username "${OAUTH_OFFICE365_USE_EMAIL_AS_USERNAME}"
+    [ -z "${OAUTH_OFFICE365_CLIENT_ID}" ]             || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.client-id "${OAUTH_OFFICE365_CLIENT_ID}"
+    [ -z "${OAUTH_OFFICE365_CLIENT_SECRET}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.client-secret "${OAUTH_OFFICE365_CLIENT_SECRET}"
   fi
 
   # Section container
@@ -245,6 +264,16 @@ if [ "$1" = "/gerrit-start.sh" ]; then
      ;;
   esac
   set_gerrit_config gitweb.type "$GITWEB_TYPE"
+
+  # Section theme (only valid for GWT UI)
+  [ -z "${THEME_BACKGROUNDCOLOR}" ]             || set_gerrit_config theme.backgroundColor "${THEME_BACKGROUNDCOLOR}"
+  [ -z "${THEME_TOPMENUCOLOR}" ]                || set_gerrit_config theme.topMenuColor "${THEME_TOPMENUCOLOR}"
+  [ -z "${THEME_TEXTCOLOR}" ]                   || set_gerrit_config theme.textColor "${THEME_TEXTCOLOR}"
+  [ -z "${THEME_TRIMCOLOR}" ]                   || set_gerrit_config theme.trimColor "${THEME_TRIMCOLOR}"
+  [ -z "${THEME_SELECTIONCOLOR}" ]              || set_gerrit_config theme.selectionColor "${THEME_SELECTIONCOLOR}"
+  [ -z "${THEME_CHANGETABLEOUTDATEDCOLOR}" ]    || set_gerrit_config theme.changeTableOutdatedColor "${THEME_CHANGETABLEOUTDATEDCOLOR}"
+  [ -z "${THEME_TABLEODDROWCOLOR}" ]            || set_gerrit_config theme.tableOddRowColor "${THEME_TABLEODDROWCOLOR}"
+  [ -z "${THEME_TABLEEVENROWCOLOR}" ]           || set_gerrit_config theme.tableEvenRowColor "${THEME_TABLEEVENROWCOLOR}"
 
   # Private key
   for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key; do

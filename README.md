@@ -1,15 +1,21 @@
 # Gerrit Docker image
+
  The Gerrit code review system with PostgreSQL and OpenLDAP integration supported.
- This image is based on the Alpine Linux project which makes this image smaller and faster than before.
+ This image is based on the openjdk:jre-alpine or the openjdk:jre-slim which makes this image small and fast.
 
 ## Versions
 
+#### Alpine base
  * openfrontier/gerrit:latest -> 2.14.6
  * openfrontier/gerrit:2.15-rcx -> 2.15-rc2
  * openfrontier/gerrit:2.13.x -> 2.13.9
  * openfrontier/gerrit:2.12.x -> 2.12.7
  * openfrontier/gerrit:2.11.x -> 2.11.10
  * openfrontier/gerrit:2.10.x -> 2.10.6
+
+#### Debian base
+
+ * openfrontier/gerrit:jre-slim -> 2.14.5.1
 
 ## Container Quickstart
 
@@ -43,11 +49,18 @@
 
     docker run -d -v ~/gerrit_volume:/var/gerrit/review_site -p 8080:8080 -p 29418:29418 openfrontier/gerrit
 
-## Install plugins on start up.
+## Download & Install plugins on start up.
 
-  When calling gerrit init --batch, it is possible to list plugins to be installed with --install-plugin=<plugin_name>. This can be done using the GERRIT_INIT_ARGS environment variable. See [Gerrit Documentation](https://gerrit-review.googlesource.com/Documentation/pgm-init.html) for more information.
+  Plugins not embedded in the image can be automatically download from [GerritForge](https://gerrit-ci.gerritforge.com/) by passing the `GET_PLUGINS` environment variable.
+  The format is a comma-separated list of entries which have the format `<name>:<version>:<provider>', where 'version' defaults to 'master' and 'provider' defaults to 'gerritforge' (only provider supported at the moment).
 
-    #Install download-commands plugin on start up
+  For instance, to install the plugins reviewers-by-blame and rabbitmq:
+
+    -e GET_PLUGINS="reviewers-by-blame:stable-2.15,rabbitmq"
+
+  When calling gerrit init --batch, it is possible to list plugins to be installed with --install-plugin=<plugin_name>. This can be done using the `GERRIT_INIT_ARGS` environment variable. See [Gerrit Documentation](https://gerrit-review.googlesource.com/Documentation/pgm-init.html) for more information.
+
+    # Install download-commands plugin on start up
     docker run -d -p 8080:8080 -p 29418:29418 -e GERRIT_INIT_ARGS='--install-plugin=download-commands' openfrontier/gerrit
 
 ## Extend this image.
@@ -164,6 +177,9 @@
     -e OAUTH_BITBUCKET_CLIENT_ID=abcdefg \
     -e OAUTH_BITBUCKET_CLIENT_SECRET=secret123 \
     -e OAUTH_BITBUCKET_FIX_LEGACY_USER_ID=true \
+    # Office365 OAuth
+    -e OAUTH_OFFICE365_CLIENT_ID=abcdefg \
+    -e OAUTH_OFFICE365_CLIENT_SECRET=secret123 \
     -d openfrontier/gerrit
   ```
 
