@@ -15,7 +15,7 @@
 
 #### Debian base
 
- * openfrontier/gerrit:jre-slim -> 2.14.5.1
+ * openfrontier/gerrit:jre-slim -> 2.14.7
 
 ## Container Quickstart
 
@@ -235,7 +235,7 @@ before returning which will cause the container to exit soon after.
 
 ## Sample operational scripts
 
-   An example to demonstrate the way of extending this Gerrit container to integrate with Jenkins are located in [openfrontier/gerrit-docker](https://github.com/openfrontier/gerrit-docker) project.
+   An example to demonstrate how to extend this Gerrit image to integrate with Jenkins are located in the [openfrontier/gerrit-ci](https://hub.docker.com/r/openfrontier/gerrit-ci/) .
 
    A Jenkins docker image with some sample scripts to integrate with this Gerrit image can be pulled from [openfrontier/jenkins](https://hub.docker.com/r/openfrontier/jenkins/).
 
