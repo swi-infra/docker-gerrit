@@ -40,10 +40,13 @@ RUN /get-plugin.sh gitiles stable-2.15
 RUN /get-plugin.sh metrics-reporter-graphite
 
 # oauth2 plugin
-RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.1 davido
+RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.2 davido
 
 # importer
-RUN /get-plugin.sh importer
+RUN /get-plugin.sh importer stable-2.15
+
+# readonly
+RUN /get-plugin.sh readonly stable-2.15
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
