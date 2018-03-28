@@ -6,8 +6,8 @@
 ## Versions
 
 #### Alpine base
- * openfrontier/gerrit:latest -> 2.14.6
- * openfrontier/gerrit:2.15-rcx -> 2.15-rc3
+ * openfrontier/gerrit:latest -> 2.14.7
+ * openfrontier/gerrit:2.15-rcx -> 2.15-rc4
  * openfrontier/gerrit:2.13.x -> 2.13.9
  * openfrontier/gerrit:2.12.x -> 2.12.7
  * openfrontier/gerrit:2.11.x -> 2.11.10
