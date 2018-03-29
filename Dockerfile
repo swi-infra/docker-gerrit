@@ -6,7 +6,7 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION 2.15-rc4
+ENV GERRIT_VERSION 2.15
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -46,7 +46,7 @@ RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.2 davido
 RUN /get-plugin.sh importer stable-2.15
 
 # readonly
-RUN /get-plugin.sh readonly stable-2.15
+#RUN /get-plugin.sh readonly stable-2.15
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
