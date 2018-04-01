@@ -303,11 +303,9 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       GERRIT_VERSIONFILE="${GERRIT_SITE}/gerrit_version"
 
       if [ -n "${IGNORE_VERSIONCHECK}" ]; then
-        echo "Don't perform a version check and never do a full reindex"
-        NEED_REINDEX=0
+        echo "Do not perform a version check"
       else
-        # check whether its a good idea to do a full upgrade
-        NEED_REINDEX=1
+        # Check whether its a good idea to do a full upgrade
         echo "Checking version file ${GERRIT_VERSIONFILE}"
         if [ -f "${GERRIT_VERSIONFILE}" ]; then
           OLD_GERRIT_VER="V$(cat ${GERRIT_VERSIONFILE})"
@@ -315,14 +313,16 @@ if [ "$1" = "/gerrit-start.sh" ]; then
           echo " have old gerrit version ${OLD_GERRIT_VER}"
           if [ "${OLD_GERRIT_VER}" == "${GERRIT_VER}" ]; then
             echo " same gerrit version, no upgrade necessary ${OLD_GERRIT_VER} == ${GERRIT_VER}"
-            NEED_REINDEX=0
           else
             echo " gerrit version mismatch #${OLD_GERRIT_VER}# != #${GERRIT_VER}#"
+            NEED_REINDEX=1
           fi
         else
           echo " gerrit version file does not exist, upgrade necessary"
+          NEED_REINDEX=1
         fi
       fi
+
       if [ ${NEED_REINDEX} -eq 1 ]; then
         echo "Reindexing..."
         su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
