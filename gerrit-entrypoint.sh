@@ -23,6 +23,10 @@ set_graphite_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/metrics-reporter-graphite.config" "$@"
 }
 
+set_notedb_config() {
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/notedb.config" "$@"
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -243,6 +247,15 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${GRAPHITE_PORT}" ]   || set_graphite_config graphite.port "${GRAPHITE_PORT}"
   [ -z "${GRAPHITE_PREFIX}" ] || set_graphite_config graphite.prefix "${GRAPHITE_PREFIX}"
   [ -z "${GRAPHITE_RATE}" ]   || set_graphite_config graphite.rate "${GRAPHITE_RATE}"
+
+  # Section noteDb
+  set_notedb_config noteDb.changes.autoMigrate false
+  set_notedb_config noteDb.changes.trial false
+  set_notedb_config noteDb.changes.write true
+  set_notedb_config noteDb.changes.read true
+  set_notedb_config noteDb.changes.sequence true
+  set_notedb_config noteDb.changes.primaryStorage "note db"
+  set_notedb_config noteDb.changes.disableReviewDb true
 
   # Section httpd
   [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
