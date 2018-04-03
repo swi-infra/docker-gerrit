@@ -6,38 +6,34 @@
 ## Versions
 
 #### Alpine base
- * openfrontier/gerrit:latest -> 2.14.7
- * openfrontier/gerrit:2.15-rcx -> 2.15-rc3
- * openfrontier/gerrit:2.13.x -> 2.13.9
- * openfrontier/gerrit:2.12.x -> 2.12.7
- * openfrontier/gerrit:2.11.x -> 2.11.10
- * openfrontier/gerrit:2.10.x -> 2.10.6
-
-#### Debian base
-
- * openfrontier/gerrit:jre-slim -> 2.14.5.1
+ * quay.io/swi-infra/gerrit:latest -> 2.15
+ * quay.io/swi-infra/gerrit:2.14.x -> 2.14.7
+ * quay.io/swi-infra/gerrit:2.13.x -> 2.13.9
+ * quay.io/swi-infra/gerrit:2.12.x -> 2.12.7
+ * quay.io/swi-infra/gerrit:2.11.x -> 2.11.10
+ * quay.io/swi-infra/gerrit:2.10.x -> 2.10.6
 
 ## Container Quickstart
 
   1. Initialize and start gerrit.
 
-    docker run -d -p 8080:8080 -p 29418:29418 openfrontier/gerrit
+    docker run -d -p 8080:8080 -p 29418:29418 quay.io/swi-infra/gerrit
 
   2. Open your browser to http://<docker host url>:8080
 
 ## Use HTTP authentication type
 
-    docker run -d -p 8080:8080 -p 29418:29418 -e AUTH_TYPE=HTTP openfrontier/gerrit
+    docker run -d -p 8080:8080 -p 29418:29418 -e AUTH_TYPE=HTTP quay.io/swi-infra/gerrit
 
 ## Use another container as the gerrit site storage.
 
   1. Create a volume container.
 
-    docker run --name gerrit_volume openfrontier/gerrit echo "Gerrit volume container."
+    docker run --name gerrit_volume quay.io/swi-infra/gerrit echo "Gerrit volume container."
 
   2. Initialize and start gerrit using volume created above.
 
-    docker run -d --volumes-from gerrit_volume -p 8080:8080 -p 29418:29418 openfrontier/gerrit
+    docker run -d --volumes-from gerrit_volume -p 8080:8080 -p 29418:29418 quay.io/swi-infra/gerrit
 
 ## Use local directory as the gerrit site storage.
 
@@ -47,7 +43,7 @@
 
   2. Initialize and start gerrit using the local directory created above.
 
-    docker run -d -v ~/gerrit_volume:/var/gerrit/review_site -p 8080:8080 -p 29418:29418 openfrontier/gerrit
+    docker run -d -v ~/gerrit_volume:/var/gerrit/review_site -p 8080:8080 -p 29418:29418 quay.io/swi-infra/gerrit
 
 ## Download & Install plugins on start up.
 
@@ -61,7 +57,7 @@
   When calling gerrit init --batch, it is possible to list plugins to be installed with --install-plugin=<plugin_name>. This can be done using the `GERRIT_INIT_ARGS` environment variable. See [Gerrit Documentation](https://gerrit-review.googlesource.com/Documentation/pgm-init.html) for more information.
 
     # Install download-commands plugin on start up
-    docker run -d -p 8080:8080 -p 29418:29418 -e GERRIT_INIT_ARGS='--install-plugin=download-commands' openfrontier/gerrit
+    docker run -d -p 8080:8080 -p 29418:29418 -e GERRIT_INIT_ARGS='--install-plugin=download-commands' quay.io/swi-infra/gerrit
 
 ## Extend this image.
 
@@ -73,7 +69,7 @@
   You can also extend the image with a simple `Dockerfile`. The following example will add some scripts to initialize the container on start up.
 
   ```dockerfile
-  FROM openfrontier/gerrit:latest
+  FROM quay.io/swi-infra/gerrit:latest
 
   COPY gerrit-create-user.sh /docker-entrypoint-init.d/gerrit-create-user.sh
   COPY gerrit-upload-ssh-key.sh /docker-entrypoint-init.d/gerrit-upload-ssh-key.sh
@@ -105,7 +101,7 @@
     -e AUTH_TYPE=LDAP \
     -e LDAP_SERVER=ldap://ldap.server.address \
     -e LDAP_ACCOUNTBASE=<ldap-basedn> \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Setup sendemail options.
@@ -128,7 +124,7 @@
     -e SMTP_PASS=<smtp password> \
     -e SMTP_CONNECT_TIMEOUT=10sec \
     -e SMTP_FROM=USER \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Setup user options
@@ -145,7 +141,7 @@
     -e WEBURL=http://your.site.domain:8080 \
     -e USER_NAME=gerrit \
     -e USER_EMAIL=gerrit@your.site.domain \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Setup OAUTH options
@@ -177,7 +173,10 @@
     -e OAUTH_BITBUCKET_CLIENT_ID=abcdefg \
     -e OAUTH_BITBUCKET_CLIENT_SECRET=secret123 \
     -e OAUTH_BITBUCKET_FIX_LEGACY_USER_ID=true \
-    -d openfrontier/gerrit
+    # Office365 OAuth
+    -e OAUTH_OFFICE365_CLIENT_ID=abcdefg \
+    -e OAUTH_OFFICE365_CLIENT_SECRET=secret123 \
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Using gitiles instead of gitweb
@@ -188,7 +187,7 @@
     -p 8080:8080 \
     -p 29418:29418 \
     -e GITWEB_TYPE=gitiles \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Setup DEVELOPMENT_BECOME_ANY_ACCOUNT option
@@ -202,7 +201,7 @@ When this is the configured authentication method a hyperlink titled "Become" ap
     -p 8080:8080 \
     -p 29418:29418 \
     -e AUTH_TYPE=DEVELOPMENT_BECOME_ANY_ACCOUNT \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Override the default startup action
@@ -223,7 +222,7 @@ started with `supervise` as follows:
         -v ~/gerrit_volume:/var/gerrit/review_site \
         -p 8080:8080 \
         -p 29418:29418 \
-        -d openfrontier/gerrit
+        -d quay.io/swi-infra/gerrit
   ```
 
 **NOTE:** Not all init actions make sense for starting Gerrit in a Docker
@@ -232,7 +231,7 @@ before returning which will cause the container to exit soon after.
 
 ## Sample operational scripts
 
-   An example to demonstrate the way of extending this Gerrit container to integrate with Jenkins are located in [openfrontier/gerrit-docker](https://github.com/openfrontier/gerrit-docker) project.
+   An example to demonstrate how to extend this Gerrit image to integrate with Jenkins are located in the [openfrontier/gerrit-ci](https://hub.docker.com/r/openfrontier/gerrit-ci/) .
 
    A Jenkins docker image with some sample scripts to integrate with this Gerrit image can be pulled from [openfrontier/jenkins](https://hub.docker.com/r/openfrontier/jenkins/).
 
@@ -240,7 +239,7 @@ before returning which will cause the container to exit soon after.
 
 ## Sync timezone with the host server.
 
-    docker run -d -p 8080:8080 -p 29418:29418 -v /etc/localtime:/etc/localtime:ro openfrontier/gerrit
+    docker run -d -p 8080:8080 -p 29418:29418 -v /etc/localtime:/etc/localtime:ro quay.io/swi-infra/gerrit
 
 ## Automatic reindex detection
 
@@ -257,5 +256,5 @@ before returning which will cause the container to exit soon after.
         -v ~/gerrit_volume:/var/gerrit/review_site \
         -p 8080:8080 \
         -p 29418:29418 \
-        -d openfrontier/gerrit
+        -d quay.io/swi-infra/gerrit
   ```
