@@ -88,12 +88,28 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     echo
   done
 
+  # Determine serverId from All-Projects.git if not specified externally
+  if [ -z "${SERVER_ID}" ]; then
+    if [ -e "${GERRIT_SITE}/git/All-Projects.git" ]; then
+      git clone "${GERRIT_SITE}/git/All-Projects.git" "/tmp/All-Projects"
+      cd "/tmp/All-Projects"
+      git ls-remote origin
+      META_REF="$(git ls-remote origin | grep -e '/meta$' | tail -1 | awk '{print $2}')"
+      if [ -n "${META_REF}" ]; then
+        git fetch origin "${META_REF}"
+        git checkout FETCH_HEAD
+        SERVER_ID="$(jq -r '.comments[0].serverId' $(ls -1))"
+      fi
+    fi
+  fi
+
   # Customize gerrit.config
 
   # Section gerrit
   [ -z "${WEBURL}" ] || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
   [ -z "${GITHTTPURL}" ] || set_gerrit_config gerrit.gitHttpUrl "${GITHTTPURL}"
   [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
+  [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
   # Section sshd
   [ -z "${LISTEN_ADDR}" ]       || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
