@@ -23,6 +23,10 @@ set_graphite_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/metrics-reporter-graphite.config" "$@"
 }
 
+set_notedb_config() {
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/notedb.config" "$@"
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -84,12 +88,28 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     echo
   done
 
+  # Determine serverId from All-Projects.git if not specified externally
+  if [ -z "${SERVER_ID}" ]; then
+    if [ -e "${GERRIT_SITE}/git/All-Projects.git" ]; then
+      git clone "${GERRIT_SITE}/git/All-Projects.git" "/tmp/All-Projects"
+      cd "/tmp/All-Projects"
+      git ls-remote origin
+      META_REF="$(git ls-remote origin | grep -e '/meta$' | tail -1 | awk '{print $2}')"
+      if [ -n "${META_REF}" ]; then
+        git fetch origin "${META_REF}"
+        git checkout FETCH_HEAD
+        SERVER_ID="$(jq -r '.comments[0].serverId' $(ls -1))"
+      fi
+    fi
+  fi
+
   # Customize gerrit.config
 
   # Section gerrit
   [ -z "${WEBURL}" ] || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
   [ -z "${GITHTTPURL}" ] || set_gerrit_config gerrit.gitHttpUrl "${GITHTTPURL}"
   [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
+  [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
   # Section sshd
   [ -z "${LISTEN_ADDR}" ]       || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
@@ -252,6 +272,15 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${GRAPHITE_PREFIX}" ] || set_graphite_config graphite.prefix "${GRAPHITE_PREFIX}"
   [ -z "${GRAPHITE_RATE}" ]   || set_graphite_config graphite.rate "${GRAPHITE_RATE}"
 
+  # Section noteDb
+  set_notedb_config noteDb.changes.autoMigrate false
+  set_notedb_config noteDb.changes.trial false
+  set_notedb_config noteDb.changes.write true
+  set_notedb_config noteDb.changes.read true
+  set_notedb_config noteDb.changes.sequence true
+  set_notedb_config noteDb.changes.primaryStorage "note db"
+  set_notedb_config noteDb.changes.disableReviewDb true
+
   # Section httpd
   [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
 
@@ -308,11 +337,9 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       GERRIT_VERSIONFILE="${GERRIT_SITE}/gerrit_version"
 
       if [ -n "${IGNORE_VERSIONCHECK}" ]; then
-        echo "Don't perform a version check and never do a full reindex"
-        NEED_REINDEX=0
+        echo "Do not perform a version check"
       else
-        # check whether its a good idea to do a full upgrade
-        NEED_REINDEX=1
+        # Check whether its a good idea to do a full upgrade
         echo "Checking version file ${GERRIT_VERSIONFILE}"
         if [ -f "${GERRIT_VERSIONFILE}" ]; then
           OLD_GERRIT_VER="V$(cat ${GERRIT_VERSIONFILE})"
@@ -320,14 +347,16 @@ if [ "$1" = "/gerrit-start.sh" ]; then
           echo " have old gerrit version ${OLD_GERRIT_VER}"
           if [ "${OLD_GERRIT_VER}" == "${GERRIT_VER}" ]; then
             echo " same gerrit version, no upgrade necessary ${OLD_GERRIT_VER} == ${GERRIT_VER}"
-            NEED_REINDEX=0
           else
             echo " gerrit version mismatch #${OLD_GERRIT_VER}# != #${GERRIT_VER}#"
+            NEED_REINDEX=1
           fi
         else
           echo " gerrit version file does not exist, upgrade necessary"
+          NEED_REINDEX=1
         fi
       fi
+
       if [ ${NEED_REINDEX} -eq 1 ]; then
         echo "Reindexing..."
         su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
