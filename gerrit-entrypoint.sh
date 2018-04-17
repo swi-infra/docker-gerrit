@@ -116,9 +116,15 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
   # Section sshd
-  [ -z "${LISTEN_ADDR}" ]       || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
-  [ -z "${SSHD_THREADS}" ]      || set_gerrit_config sshd.threads "${SSHD_THREADS}"
-  [ -z "${SSHD_BATCHTHREADS}" ] || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
+  [ -z "${LISTEN_ADDR}" ]         || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  [ -z "${SSHD_THREADS}" ]        || set_gerrit_config sshd.threads "${SSHD_THREADS}"
+  [ -z "${SSHD_BATCHTHREADS}" ]   || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
+  [ -z "${SSHD_STREAMTHREADS}" ]  || set_gerrit_config sshd.streamThreads "${SSHD_STREAMTHREADS}"
+  [ -z "${SSHD_IDLETIMEOUT}" ]    || set_gerrit_config sshd.idleTimeout "${SSHD_IDLETIMEOUT}"
+  [ -z "${SSHD_WAITTIMEOUT}" ]    || set_gerrit_config sshd.waitTimeout "${SSHD_WAITTIMEOUT}"
+
+  # Section transfer
+  [ -z "${TRANSFER_TIMEOUT}" ] || set_gerrit_config transfer.timeout "${TRANSFER_TIMEOUT}"
 
   # Section database
   if [ "${DATABASE_TYPE}" = 'postgresql' ]; then
@@ -311,7 +317,9 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
 
   # Section httpd
-  [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
+  [ -z "${HTTPD_LISTENURL}" ]     || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
+  [ -z "${HTTPD_MAXQUEUED}" ]     || set_gerrit_config httpd.maxQueued "${HTTPD_MAXQUEUED}"
+  [ -z "${HTTPD_IDLETIMEOUT}" ]   || set_gerrit_config httpd.idleTimeout "${HTTPD_IDLETIMEOUT}"
 
   # Section gitweb
   case "$GITWEB_TYPE" in
@@ -332,6 +340,14 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${THEME_CHANGETABLEOUTDATEDCOLOR}" ]    || set_gerrit_config theme.changeTableOutdatedColor "${THEME_CHANGETABLEOUTDATEDCOLOR}"
   [ -z "${THEME_TABLEODDROWCOLOR}" ]            || set_gerrit_config theme.tableOddRowColor "${THEME_TABLEODDROWCOLOR}"
   [ -z "${THEME_TABLEEVENROWCOLOR}" ]           || set_gerrit_config theme.tableEvenRowColor "${THEME_TABLEEVENROWCOLOR}"
+
+  # Additional configuration in /etc/gerrit/*.config.d/
+
+  for cfg in $(find /etc/gerrit/ -maxdepth 1 -type d -name "*.config.d"); do
+      for file in $(find "${cfg}" -name "*.config"); do
+          cat $file >> "${GERRIT_SITE}/etc/$(basename ${cfg/.d})"
+      done
+  done
 
   # Private key
   for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key; do
