@@ -37,7 +37,7 @@ RUN /get-plugin.sh events-log stable-2.15
 RUN /get-plugin.sh gitiles stable-2.15
 
 # metrics-reporter-graphite
-RUN /get-plugin.sh metrics-reporter-graphite
+RUN /get-plugin.sh metrics-reporter-graphite master-stable-2.15
 
 # lfs
 RUN /get-plugin.sh lfs stable-2.15
