@@ -274,7 +274,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   set_gerrit_config plugins.allowRemoteAdmin true
 
   # Section plugin events-log
-  set_gerrit_config plugin.events-log.storeUrl "jdbc:h2:${GERRIT_SITE}/db/ChangeEvents"
+  set_gerrit_config plugin.events-log.storeUrl ${GERRIT_EVENTS_LOG_STOREURL:-"jdbc:h2:${GERRIT_SITE}/db/ChangeEvents"}
 
   # Section plugin metrics-reporter-graphite
   [ -z "${GRAPHITE_HOST}" ]   || set_graphite_config graphite.host "${GRAPHITE_HOST}"
