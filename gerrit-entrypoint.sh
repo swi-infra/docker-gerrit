@@ -27,6 +27,10 @@ set_notedb_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/notedb.config" "$@"
 }
 
+set_lfs_config() {
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/lfs.config" "$@"
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -112,9 +116,15 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
   # Section sshd
-  [ -z "${LISTEN_ADDR}" ]       || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
-  [ -z "${SSHD_THREADS}" ]      || set_gerrit_config sshd.threads "${SSHD_THREADS}"
-  [ -z "${SSHD_BATCHTHREADS}" ] || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
+  [ -z "${LISTEN_ADDR}" ]         || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  [ -z "${SSHD_THREADS}" ]        || set_gerrit_config sshd.threads "${SSHD_THREADS}"
+  [ -z "${SSHD_BATCHTHREADS}" ]   || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
+  [ -z "${SSHD_STREAMTHREADS}" ]  || set_gerrit_config sshd.streamThreads "${SSHD_STREAMTHREADS}"
+  [ -z "${SSHD_IDLETIMEOUT}" ]    || set_gerrit_config sshd.idleTimeout "${SSHD_IDLETIMEOUT}"
+  [ -z "${SSHD_WAITTIMEOUT}" ]    || set_gerrit_config sshd.waitTimeout "${SSHD_WAITTIMEOUT}"
+
+  # Section transfer
+  [ -z "${TRANSFER_TIMEOUT}" ] || set_gerrit_config transfer.timeout "${TRANSFER_TIMEOUT}"
 
   # Section database
   if [ "${DATABASE_TYPE}" = 'postgresql' ]; then
@@ -264,7 +274,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   set_gerrit_config plugins.allowRemoteAdmin true
 
   # Section plugin events-log
-  set_gerrit_config plugin.events-log.storeUrl "jdbc:h2:${GERRIT_SITE}/db/ChangeEvents"
+  set_gerrit_config plugin.events-log.storeUrl ${GERRIT_EVENTS_LOG_STOREURL:-"jdbc:h2:${GERRIT_SITE}/db/ChangeEvents"}
 
   # Section plugin metrics-reporter-graphite
   [ -z "${GRAPHITE_HOST}" ]   || set_graphite_config graphite.host "${GRAPHITE_HOST}"
@@ -281,8 +291,35 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   set_notedb_config noteDb.changes.primaryStorage "note db"
   set_notedb_config noteDb.changes.disableReviewDb true
 
+  # Section LFS
+  if [[ "${LFS_ENABLE}" == "true" ]]; then
+      echo "Enabling LFS"
+
+      set_gerrit_config lfs.plugin "lfs"
+
+      [ -z "${LFS_STORAGE}" ] || set_lfs_config storage.backend "${LFS_STORAGE}"
+
+      if [[ "${LFS_STORAGE}" == "fs" ]]; then
+          [ -z "${LFS_FS_DIRECTORY}" ]         || set_lfs_config fs.directory "${LFS_FS_DIRECTORY}"
+          [ -z "${LFS_FS_EXPIRATIONSECONDS}" ] || set_lfs_config fs.expirationSeconds "${LFS_FS_EXPIRATIONSECONDS}"
+      elif [[ "${LFS_STORAGE}" == "s3" ]]; then
+          [ -z "${LFS_S3_REGION}" ]            || set_lfs_config s3.region "${LFS_S3_REGION}"
+          [ -z "${LFS_S3_BUCKET}" ]            || set_lfs_config s3.bucket "${LFS_S3_BUCKET}"
+          [ -z "${LFS_S3_STORAGECLASS}" ]      || set_lfs_config s3.storageClass "${LFS_S3_STORAGECLASS}"
+          [ -z "${LFS_S3_EXPIRATIONSECONDS}" ] || set_lfs_config s3.expirationSeconds "${LFS_S3_EXPIRATIONSECONDS}"
+          [ -z "${LFS_S3_DISABLESSLVERIFY}" ]  || set_lfs_config s3.disableSslVerify "${LFS_S3_DISABLESSLVERIFY}"
+          [ -z "${LFS_S3_ACCESSKEY}" ]         || set_lfs_config s3.accessKey "${LFS_S3_ACCESSKEY}"
+          [ -z "${LFS_S3_SECRETKEY}" ]         || set_lfs_config s3.secretKey "${LFS_S3_SECRETKEY}"
+      else
+          echo "LFS: Unsupported storage backend '${LFS_STORAGE}'"
+          exit 1
+      fi
+  fi
+
   # Section httpd
-  [ -z "${HTTPD_LISTENURL}" ] || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
+  [ -z "${HTTPD_LISTENURL}" ]     || set_gerrit_config httpd.listenUrl "${HTTPD_LISTENURL}"
+  [ -z "${HTTPD_MAXQUEUED}" ]     || set_gerrit_config httpd.maxQueued "${HTTPD_MAXQUEUED}"
+  [ -z "${HTTPD_IDLETIMEOUT}" ]   || set_gerrit_config httpd.idleTimeout "${HTTPD_IDLETIMEOUT}"
 
   # Section gitweb
   case "$GITWEB_TYPE" in
@@ -304,11 +341,24 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${THEME_TABLEODDROWCOLOR}" ]            || set_gerrit_config theme.tableOddRowColor "${THEME_TABLEODDROWCOLOR}"
   [ -z "${THEME_TABLEEVENROWCOLOR}" ]           || set_gerrit_config theme.tableEvenRowColor "${THEME_TABLEEVENROWCOLOR}"
 
+  # Additional configuration in /etc/gerrit/*.config.d/
+
+  for cfg in $(find /etc/gerrit/ -maxdepth 1 -type d -name "*.config.d"); do
+      for file in $(find "${cfg}" -name "*.config"); do
+          cat $file >> "${GERRIT_SITE}/etc/$(basename ${cfg/.d})"
+      done
+  done
+
   # Private key
-  for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key; do
+  for key in ssh_host_key ssh_host_rsa_key ssh_host_dsa_key ssh_host_ecdsa_key ssh_host_ecdsa_384_key ssh_host_ecdsa_521_key ssh_host_ed25519_key; do
     if [ -e "${GERRIT_HOME}/${key}" ]; then
-      cp ${GERRIT_HOME}/${key} ${GERRIT_SITE}/etc/
-      chown ${GERRIT_USER} ${GERRIT_SITE}/etc/${key}
+      cp "${GERRIT_HOME}/${key}" "${GERRIT_SITE}/etc/"
+      chown ${GERRIT_USER} "${GERRIT_SITE}/etc/${key}"
+
+      if [ -e "${GERRIT_HOME}/${key}.pub" ]; then
+        cp "${GERRIT_HOME}/${key}.pub" "${GERRIT_SITE}/etc/"
+        chown ${GERRIT_USER} "${GERRIT_SITE}/etc/${key}.pub"
+      fi
 
       if [ -e "${GERRIT_SITE}/etc/ssh_host_key" ] && [[ "$key" != "ssh_host_key" ]]; then
         rm -rf ${GERRIT_SITE}/etc/ssh_host_key

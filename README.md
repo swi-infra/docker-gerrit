@@ -6,7 +6,7 @@
 ## Versions
 
 #### Alpine base
- * quay.io/swi-infra/gerrit:latest -> 2.15
+ * quay.io/swi-infra/gerrit:latest -> 2.15.1
  * quay.io/swi-infra/gerrit:2.14.x -> 2.14.7
  * quay.io/swi-infra/gerrit:2.13.x -> 2.13.9
  * quay.io/swi-infra/gerrit:2.12.x -> 2.12.7
