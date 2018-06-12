@@ -31,6 +31,11 @@ set_lfs_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/lfs.config" "$@"
 }
 
+set_rabbitmq_config() {
+  su-exec ${GERRIT_USER} mkdir -p "${GERRIT_SITE}/data/rabbitmq"
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/data/rabbitmq/rabbitmq.config" "$@"
+}
+
 first_run=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
@@ -69,6 +74,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/delete-project.jar ${GERRIT_SITE}/plugins/delete-project.jar
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/events-log.jar ${GERRIT_SITE}/plugins/events-log.jar
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
+  [ -z "${AMQP_URI}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/rabbitmq.jar ${GERRIT_SITE}/plugins/rabbitmq.jar
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
 
   # Dynamically download plugins
@@ -106,6 +112,21 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       fi
     fi
   fi
+
+  # Customize rabbitmq.config
+
+  # Section amqp
+  [ -z "${AMQP_URI}" ] || set_rabbitmq_config amqp.uri "${AMQP_URI}"
+  [ -z "${AMQP_USERNAME}" ] || set_rabbitmq_config amqp.username "${AMQP_USERNAME}"
+  [ -z "${AMQP_PASSWORD}" ] || set_rabbitmq_config amqp.password "${AMQP_PASSWORD}"
+
+  # Section exchange
+  [ -z "${EXCHANGE_NAME}" ] || set_rabbitmq_config exchange.name "${EXCHANGE_NAME}"
+
+  # Section message
+  [ -z "${MESSAGE_DELIVERYMODE}" ] || set_rabbitmq_config message.deliveryMode "${MESSAGE_DELIVERYMODE}"
+  [ -z "${MESSAGE_PRIORITY}" ] || set_rabbitmq_config message.priority "${MESSAGE_PRIORITY}"
+  [ -z "${MESSAGE_ROUTINGKEY}" ] || set_rabbitmq_config message.routingKey "${MESSAGE_ROUTINGKEY}"
 
   # Customize gerrit.config
 
