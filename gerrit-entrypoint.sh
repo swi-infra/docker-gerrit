@@ -76,6 +76,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
   [ -z "${AMQP_URI}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/rabbitmq.jar ${GERRIT_SITE}/plugins/rabbitmq.jar
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
+  [[ "${WITH_VERIFY_STATUS}" != "true" ]] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/verify-status.jar ${GERRIT_SITE}/plugins/verify-status.jar
 
   # Dynamically download plugins
   for plugin_info in ${GET_PLUGINS//,/ }; do
