@@ -51,6 +51,9 @@ RUN /get-plugin.sh importer stable-2.15
 # readonly
 RUN /get-plugin.sh readonly stable-2.15
 
+# rabbitmq
+RUN /get-plugin.sh rabbitmq stable-2.15
+
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
 COPY gerrit-start.sh /
