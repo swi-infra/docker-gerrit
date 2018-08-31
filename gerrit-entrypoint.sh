@@ -283,6 +283,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${OAUTH_CAS_CLIENT_SECRET}" ]      || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.client-secret "${OAUTH_CAS_CLIENT_SECRET}"
     [ -z "${OAUTH_CAS_LINK_OPENID}" ]        || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.link-to-existing-openid-accounts "${OAUTH_CAS_LINK_OPENID}"
     [ -z "${OAUTH_CAS_FIX_LEGACY_USER_ID}" ] || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.fix-legacy-user-id "${OAUTH_CAS_FIX_LEGACY_USER_ID}"
+
+    # AirVantage
+    [ -z "${OAUTH_AIRVANTAGE_CLIENT_ID}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-airvantage-oauth.client-id "${OAUTH_AIRVANTAGE_CLIENT_ID}"
+    [ -z "${OAUTH_AIRVANTAGE_CLIENT_SECRET}" ]     || set_gerrit_config plugin.gerrit-oauth-provider-airvantage-oauth.client-secret "${OAUTH_AIRVANTAGE_CLIENT_SECRET}"
   fi
 
   # Section container
