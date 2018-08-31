@@ -23,6 +23,11 @@ case $PROVIDER in
             https://github.com/davido/${PLUGIN}/releases/download/${VERSION}/${PLUGIN}.jar \
             -o ${GERRIT_HOME}/${PLUGIN}.jar
         ;;
+    corfr)
+        curl -fSsL \
+            https://github.com/corfr/${PLUGIN}/releases/download/${VERSION}/${PLUGIN}.jar \
+            -o ${GERRIT_HOME}/${PLUGIN}.jar
+        ;;
     *)
         echo "Unknown provider $PROVIDER"
         exit 1

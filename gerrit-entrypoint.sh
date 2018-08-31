@@ -257,6 +257,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${OAUTH_OFFICE365_USE_EMAIL_AS_USERNAME}" ] || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.use-email-as-username "${OAUTH_OFFICE365_USE_EMAIL_AS_USERNAME}"
     [ -z "${OAUTH_OFFICE365_CLIENT_ID}" ]             || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.client-id "${OAUTH_OFFICE365_CLIENT_ID}"
     [ -z "${OAUTH_OFFICE365_CLIENT_SECRET}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.client-secret "${OAUTH_OFFICE365_CLIENT_SECRET}"
+
+    # AirVantage
+    [ -z "${OAUTH_AIRVANTAGE_CLIENT_ID}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-av-oauth.client-id "${OAUTH_AIRVANTAGE_CLIENT_ID}"
+    [ -z "${OAUTH_AIRVANTAGE_CLIENT_SECRET}" ]     || set_gerrit_config plugin.gerrit-oauth-provider-av-oauth.client-secret "${OAUTH_AIRVANTAGE_CLIENT_SECRET}"
   fi
 
   # Section container

@@ -43,7 +43,7 @@ RUN /get-plugin.sh metrics-reporter-graphite master-stable-2.15
 RUN /get-plugin.sh lfs stable-2.15
 
 # oauth2 plugin
-RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.2 davido
+RUN /get-plugin.sh gerrit-oauth-provider test-airvantage corfr
 
 # importer
 RUN /get-plugin.sh importer stable-2.15
