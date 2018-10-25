@@ -42,7 +42,7 @@ RUN /get-plugin.sh metrics-reporter-graphite master-stable-2.15
 # lfs
 RUN /get-plugin.sh lfs stable-2.15
 
-# oauth2 plugin
+# oauth plugin
 RUN /get-plugin.sh oauth stable-2.15
 
 # importer
