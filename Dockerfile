@@ -6,15 +6,15 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION 2.15.3
-ENV GERRIT_USER gerrit
+ENV GERRIT_VERSION 2.15.5
+ENV GERRIT_USER gerrit2
 ENV GERRIT_INIT_ARGS ""
 
 # Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
 RUN set -x \
-    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
+    && apk add --update --no-cache git openssh-client openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
 
 RUN mkdir /docker-entrypoint-init.d
 

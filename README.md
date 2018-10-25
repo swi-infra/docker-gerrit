@@ -1,18 +1,48 @@
 # Gerrit Docker image
 
- The Gerrit code review system with PostgreSQL and OpenLDAP integration supported.
+ The Gerrit code review system with external database and OpenLDAP integration.
  This image is based on the openjdk:jre-alpine or the openjdk:jre-slim which makes this image small and fast.
 
-## Versions
+## Branches and Tags
+
+ The `latest` is not production ready because new features will be tested on it first.
+ The branch tags like `2.14.x` or `2.15.x` are used to track the releases of Gerrit. Approved new features will be merged to these branches first then included in the next [release](https://github.com/openfrontier/docker-gerrit/releases).
 
 #### Alpine-based
- * quay.io/swi-infra/gerrit:latest -> 2.15.3
+ * quay.io/swi-infra/gerrit:latest -> 2.15.5
  * quay.io/swi-infra/gerrit:nightly -> master
  * quay.io/swi-infra/gerrit:2.14.x -> 2.14.7
  * quay.io/swi-infra/gerrit:2.13.x -> 2.13.9
  * quay.io/swi-infra/gerrit:2.12.x -> 2.12.7
  * quay.io/swi-infra/gerrit:2.11.x -> 2.11.10
  * quay.io/swi-infra/gerrit:2.10.x -> 2.10.6
+
+## Migrate from ReviewDB to NoteDB
+  Since Gerrit 2.15, [NoteDB](https://gerrit-review.googlesource.com/Documentation/note-db.html) is recommended to store account data, group data and change data.
+  Accounts and Groups are migrated offline to NoteDB automatically during the start up of the container.
+  Change data can be migrated to NoteDB offline via the `MIGRATE_TO_NOTEDB_OFFLINE` environment variable.
+  Note that migrating changes can takes about twice as long as an offline reindex. In fact, one of the
+  migration steps is a full reindex, so it can't possibly take less time.
+
+  ```shell
+    docker run \
+        -e MIGRATE_TO_NOTEDB_OFFLINE=true \
+        -v ~/gerrit_volume:/var/gerrit/review_site \
+        -p 8080:8080 \
+        -p 29418:29418 \
+        -d openfrontier/gerrit
+  ```
+  Online migration of change data is also available via the `NOTEDB_CHANGES_AUTOMIGRATE` environment variable.
+
+  ```shell
+    docker run \
+        -e NOTEDB_CHANGES_AUTOMIGRATE=true \
+        -v ~/gerrit_volume:/var/gerrit/review_site \
+        -p 8080:8080 \
+        -p 29418:29418 \
+        -d openfrontier/gerrit
+  ```
+  This feature is only available in Gerrit version 2.15 and above.
 
 ## Container Quickstart
 
@@ -78,9 +108,34 @@
   RUN chmod +x /docker-entrypoint-init.d/*.sh /docker-entrypoint-init.d/*.nohup
   ```
 
-## Run dockerized gerrit with dockerized PostgreSQL and OpenLDAP.
+## Run dockerized gerrit with external database and OpenLDAP.
+
+##### All attributes in [gerrit.config database section](https://gerrit-review.googlesource.com/Documentation/config-gerrit.html#database) are supported.
 
 ##### All attributes in [gerrit.config ldap section](https://gerrit-review.googlesource.com/Documentation/config-gerrit.html#ldap) are supported.
+
+  ```shell
+    #Start gerrit docker to connect with an already existed postgres.
+    docker run \
+    --name gerrit \
+    -p 8080:8080 \
+    -p 29418:29418 \
+    -e WEBURL=http://your.site.domain:8080 \
+    -e DATABASE_TYPE=postgresql \
+    -e DATABASE_HOSTNAME=postgres.hostname \
+    -e DATABASE_PORT=5432 \
+    -e DATABASE_DATABASE=reviewdb \
+    -e DATABASE_USERNAME=gerrit2 \
+    -e DATABASE_PASSWORD=gerrit \
+    -e AUTH_TYPE=LDAP \
+    -e LDAP_SERVER=ldap://ldap.server.address \
+    -e LDAP_ACCOUNTBASE=<ldap-basedn> \
+    -d openfrontier/gerrit
+  ```
+
+## Run dockerized gerrit with dockerized PostgreSQL and OpenLDAP.
+
+#### Note: docker --link is deprecated and this way might be unsupported in the future release.
 
   ```shell
     # Start postgres docker
@@ -154,7 +209,7 @@
     -p 29418:29418 \
     -e AUTH_TYPE=OAUTH \
     # Don't forget to set Gerrit FQDN for correct OAuth
-    -e WEB_URL=http://my-gerrit.example.com/
+    -e WEBURL=http://my-gerrit.example.com \
     -e OAUTH_ALLOW_EDIT_FULL_NAME=true \
     -e OAUTH_ALLOW_REGISTER_NEW_EMAIL=true \
     # Google OAuth
@@ -189,6 +244,17 @@
     -p 29418:29418 \
     -e GITWEB_TYPE=gitiles \
     -d quay.io/swi-infra/gerrit
+  ```
+
+## Restricting download schemes  
+
+  ```shell
+    docker run \
+    --name gerrit \
+    -p 8080:8080 \
+    -p 29418:29418 \
+    -e DOWNLOAD_SCHEMES=http ssh \
+    -d openfrontier/gerrit
   ```
 
 ## Setup DEVELOPMENT_BECOME_ANY_ACCOUNT option
