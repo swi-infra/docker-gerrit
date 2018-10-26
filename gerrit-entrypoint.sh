@@ -123,6 +123,14 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Section exchange
   [ -z "${EXCHANGE_NAME}" ] || set_rabbitmq_config exchange.name "${EXCHANGE_NAME}"
 
+  # Section download
+  if [ -n "${DOWNLOAD_SCHEMES}" ]; then
+    set_gerrit_config --unset-all download.scheme || true
+    for s in ${DOWNLOAD_SCHEMES}; do
+      set_gerrit_config --add download.scheme ${s}
+    done
+  fi
+
   # Section message
   [ -z "${MESSAGE_DELIVERYMODE}" ] || set_rabbitmq_config message.deliveryMode "${MESSAGE_DELIVERYMODE}"
   [ -z "${MESSAGE_PRIORITY}" ] || set_rabbitmq_config message.priority "${MESSAGE_PRIORITY}"
@@ -137,41 +145,46 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
   # Section sshd
-  [ -z "${LISTEN_ADDR}" ]         || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
-  [ -z "${SSHD_THREADS}" ]        || set_gerrit_config sshd.threads "${SSHD_THREADS}"
-  [ -z "${SSHD_BATCHTHREADS}" ]   || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
-  [ -z "${SSHD_STREAMTHREADS}" ]  || set_gerrit_config sshd.streamThreads "${SSHD_STREAMTHREADS}"
-  [ -z "${SSHD_IDLETIMEOUT}" ]    || set_gerrit_config sshd.idleTimeout "${SSHD_IDLETIMEOUT}"
-  [ -z "${SSHD_WAITTIMEOUT}" ]    || set_gerrit_config sshd.waitTimeout "${SSHD_WAITTIMEOUT}"
+  [ -z "${LISTEN_ADDR}" ]             || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  [ -z "${SSHD_ADVERTISE_ADDR}" ]     || set_gerrit_config sshd.advertisedAddress "${SSHD_ADVERTISE_ADDR}"
+  [ -z "${SSHD_ENABLE_COMPRESSION}" ] || set_gerrit_config sshd.enableCompression "${SSHD_ENABLE_COMPRESSION}"
+  [ -z "${SSHD_THREADS}" ]            || set_gerrit_config sshd.threads "${SSHD_THREADS}"
+  [ -z "${SSHD_BATCHTHREADS}" ]       || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
+  [ -z "${SSHD_STREAMTHREADS}" ]      || set_gerrit_config sshd.streamThreads "${SSHD_STREAMTHREADS}"
+  [ -z "${SSHD_IDLETIMEOUT}" ]        || set_gerrit_config sshd.idleTimeout "${SSHD_IDLETIMEOUT}"
+  [ -z "${SSHD_WAITTIMEOUT}" ]        || set_gerrit_config sshd.waitTimeout "${SSHD_WAITTIMEOUT}"
 
   # Section transfer
   [ -z "${TRANSFER_TIMEOUT}" ] || set_gerrit_config transfer.timeout "${TRANSFER_TIMEOUT}"
 
   # Section database
-  if [ "${DATABASE_TYPE}" = 'postgresql' ]; then
-    set_gerrit_config database.type "${DATABASE_TYPE}"
-    [ -z "${DB_PORT_5432_TCP_ADDR}" ]    || set_gerrit_config database.hostname "${DB_PORT_5432_TCP_ADDR}"
-    [ -z "${DB_PORT_5432_TCP_PORT}" ]    || set_gerrit_config database.port "${DB_PORT_5432_TCP_PORT}"
-    [ -z "${DB_ENV_POSTGRES_DB}" ]       || set_gerrit_config database.database "${DB_ENV_POSTGRES_DB}"
-    [ -z "${DB_ENV_POSTGRES_USER}" ]     || set_gerrit_config database.username "${DB_ENV_POSTGRES_USER}"
-    [ -z "${DB_ENV_POSTGRES_PASSWORD}" ] || set_secure_config database.password "${DB_ENV_POSTGRES_PASSWORD}"
-  fi
+  # docker --link is deprecated. All DB_* environment variables will be replaced by DATABASE_* below.
+  # All kinds of database.type are supported.
+  [ -z "${DATABASE_TYPE}" ]     || set_gerrit_config database.type     "${DATABASE_TYPE}"
+  [ -z "${DATABASE_HOSTNAME}" ] || set_gerrit_config database.hostname "${DATABASE_HOSTNAME}"
+  [ -z "${DATABASE_PORT}" ]     || set_gerrit_config database.port     "${DATABASE_PORT}"
+  [ -z "${DATABASE_DATABASE}" ] || set_gerrit_config database.database "${DATABASE_DATABASE}"
+  [ -z "${DATABASE_USERNAME}" ] || set_gerrit_config database.username "${DATABASE_USERNAME}"
+  [ -z "${DATABASE_PASSWORD}" ] || set_secure_config database.password "${DATABASE_PASSWORD}"
+  # JDBC URL
+  [ -z "${DATABASE_URL}" ] || set_gerrit_config database.url "${DATABASE_URL}"
+  # Other database options
+  [ -z "${DATABASE_CONNECTION_POOL}" ] || set_secure_config database.connectionPool "${DATABASE_CONNECTION_POOL}"
+  [ -z "${DATABASE_POOL_LIMIT}" ]      || set_secure_config database.poolLimit "${DATABASE_POOL_LIMIT}"
+  [ -z "${DATABASE_POOL_MIN_IDLE}" ]   || set_secure_config database.poolMinIdle "${DATABASE_POOL_MIN_IDLE}"
+  [ -z "${DATABASE_POOL_MAX_IDLE}" ]   || set_secure_config database.poolMaxIdle "${DATABASE_POOL_MAX_IDLE}"
+  [ -z "${DATABASE_POOL_MAX_WAIT}" ]   || set_secure_config database.poolMaxWait "${DATABASE_POOL_MAX_WAIT}"
 
-  # Section database
-  if [ "${DATABASE_TYPE}" = 'mysql' ]; then
-    set_gerrit_config database.type "${DATABASE_TYPE}"
-    [ -z "${DB_PORT_3306_TCP_ADDR}" ] || set_gerrit_config database.hostname "${DB_PORT_3306_TCP_ADDR}"
-    [ -z "${DB_PORT_3306_TCP_PORT}" ] || set_gerrit_config database.port "${DB_PORT_3306_TCP_PORT}"
-    [ -z "${DB_ENV_MYSQL_DB}" ]       || set_gerrit_config database.database "${DB_ENV_MYSQL_DB}"
-    [ -z "${DB_ENV_MYSQL_USER}" ]     || set_gerrit_config database.username "${DB_ENV_MYSQL_USER}"
-    [ -z "${DB_ENV_MYSQL_PASSWORD}" ] || set_secure_config database.password "${DB_ENV_MYSQL_PASSWORD}"
-  fi
+  # Section noteDB
+  [ -z "${NOTEDB_ACCOUNTS_SEQUENCEBATCHSIZE}" ] || set_gerrit_config noteDB.accounts.sequenceBatchSize "${NOTEDB_ACCOUNTS_SEQUENCEBATCHSIZE}"
+  [ -z "${NOTEDB_CHANGES_AUTOMIGRATE}" ]        || set_gerrit_config noteDB.changes.autoMigrate "${NOTEDB_CHANGES_AUTOMIGRATE}"
 
   # Section auth
   [ -z "${AUTH_TYPE}" ]                    || set_gerrit_config auth.type "${AUTH_TYPE}"
   [ -z "${AUTH_HTTP_HEADER}" ]             || set_gerrit_config auth.httpHeader "${AUTH_HTTP_HEADER}"
   [ -z "${AUTH_EMAIL_FORMAT}" ]            || set_gerrit_config auth.emailFormat "${AUTH_EMAIL_FORMAT}"
   [ -z "${AUTH_USER_NAME_TO_LOWER_CASE}" ] || set_gerrit_config auth.userNameToLowerCase "${AUTH_USER_NAME_TO_LOWER_CASE}"
+
   if [ -z "${AUTH_GIT_BASIC_AUTH_POLICY}" ]; then
     case "${AUTH_TYPE}" in
       LDAP|LDAP_BIND)
@@ -227,7 +240,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   # Section OAUTH general
   if [ "${AUTH_TYPE}" = 'OAUTH' ]  ; then
-    su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/gerrit-oauth-provider.jar ${GERRIT_SITE}/plugins/gerrit-oauth-provider.jar
+    su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/oauth.jar ${GERRIT_SITE}/plugins/oauth.jar
 
     [ -z "${OAUTH_ALLOW_EDIT_FULL_NAME}" ]     || set_gerrit_config oauth.allowEditFullName "${OAUTH_ALLOW_EDIT_FULL_NAME}"
     [ -z "${OAUTH_ALLOW_REGISTER_NEW_EMAIL}" ] || set_gerrit_config oauth.allowRegisterNewEmail "${OAUTH_ALLOW_REGISTER_NEW_EMAIL}"
@@ -257,6 +270,23 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${OAUTH_OFFICE365_USE_EMAIL_AS_USERNAME}" ] || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.use-email-as-username "${OAUTH_OFFICE365_USE_EMAIL_AS_USERNAME}"
     [ -z "${OAUTH_OFFICE365_CLIENT_ID}" ]             || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.client-id "${OAUTH_OFFICE365_CLIENT_ID}"
     [ -z "${OAUTH_OFFICE365_CLIENT_SECRET}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-office365-oauth.client-secret "${OAUTH_OFFICE365_CLIENT_SECRET}"
+
+    # Keycloak
+    [ -z "${OAUTH_KEYCLOAK_CLIENT_ID}" ]     || set_gerrit_config plugin.gerrit-oauth-provider-keycloak-oauth.client-id "${OAUTH_KEYCLOAK_CLIENT_ID}"
+    [ -z "${OAUTH_KEYCLOAK_CLIENT_SECRET}" ] || set_gerrit_config plugin.gerrit-oauth-provider-keycloak-oauth.client-secret "${OAUTH_KEYCLOAK_CLIENT_SECRET}"
+    [ -z "${OAUTH_KEYCLOAK_REALM}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-keycloak-oauth.realm "${OAUTH_KEYCLOAK_REALM}"
+    [ -z "${OAUTH_KEYCLOAK_ROOT_URL}" ]      || set_gerrit_config plugin.gerrit-oauth-provider-keycloak-oauth.root-url "${OAUTH_KEYCLOAK_ROOT_URL}"
+
+    # CAS
+    [ -z "${OAUTH_CAS_ROOT_URL}" ]           || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.root-url "${OAUTH_CAS_ROOT_URL}"
+    [ -z "${OAUTH_CAS_CLIENT_ID}" ]          || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.client-id "${OAUTH_CAS_CLIENT_ID}"
+    [ -z "${OAUTH_CAS_CLIENT_SECRET}" ]      || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.client-secret "${OAUTH_CAS_CLIENT_SECRET}"
+    [ -z "${OAUTH_CAS_LINK_OPENID}" ]        || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.link-to-existing-openid-accounts "${OAUTH_CAS_LINK_OPENID}"
+    [ -z "${OAUTH_CAS_FIX_LEGACY_USER_ID}" ] || set_gerrit_config plugin.gerrit-oauth-provider-cas-oauth.fix-legacy-user-id "${OAUTH_CAS_FIX_LEGACY_USER_ID}"
+
+    # AirVantage
+    [ -z "${OAUTH_AIRVANTAGE_CLIENT_ID}" ]         || set_gerrit_config plugin.gerrit-oauth-provider-airvantage-oauth.client-id "${OAUTH_AIRVANTAGE_CLIENT_ID}"
+    [ -z "${OAUTH_AIRVANTAGE_CLIENT_SECRET}" ]     || set_gerrit_config plugin.gerrit-oauth-provider-airvantage-oauth.client-secret "${OAUTH_AIRVANTAGE_CLIENT_SECRET}"
   fi
 
   # Section container
@@ -388,10 +418,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   done
 
   case "${DATABASE_TYPE}" in
-    postgresql) wait_for_database ${DB_PORT_5432_TCP_ADDR} ${DB_PORT_5432_TCP_PORT} ;;
-    mysql)      wait_for_database ${DB_PORT_3306_TCP_ADDR} ${DB_PORT_3306_TCP_PORT} ;;
+    postgresql) [ -z "${DB_PORT_5432_TCP_ADDR}" ]  || wait_for_database ${DB_PORT_5432_TCP_ADDR} ${DB_PORT_5432_TCP_PORT} ;;
+    mysql)      [ -z "${DB_PORT_3306_TCP_ADDR}" ]  || wait_for_database ${DB_PORT_3306_TCP_ADDR} ${DB_PORT_3306_TCP_PORT} ;;
     *)          ;;
   esac
+  # docker --link is deprecated. All DB_* environment variables will be replaced by DATABASE_* below.
+  [ ${#DATABASE_HOSTNAME} -gt 0 ] && [ ${#DATABASE_PORT} -gt 0 ] && wait_for_database ${DATABASE_HOSTNAME} ${DATABASE_PORT}
 
   if [[ "${JAVA_SLAVE}" != "true" ]]; then
 
@@ -400,6 +432,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
       echo "Empty secondary index, reindexing..."
       NEED_REINDEX=1
+    # MIGRATE_TO_NOTEDB_OFFLINE will override IGNORE_VERSIONCHECK
+    elif [ -n "${IGNORE_VERSIONCHECK}" ] && [ -z "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
+      echo "Don't perform a version check and never do a full reindex"
+      NEED_REINDEX=0
     fi
 
     echo "Upgrading gerrit..."
@@ -450,8 +486,21 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     fi
 
     if [ ${NEED_REINDEX} -eq 1 ]; then
-      echo "Reindexing ..."
-      su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+      if [ -n "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
+        echo "Migrating changes from ReviewDB to NoteDB..."
+        su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" migrate-to-note-db -d "${GERRIT_SITE}"
+      else
+        echo "Reindexing..."
+        su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+      fi
+      if [ $? -eq 0 ]; then
+        echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
+        su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
+        su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
+        echo "${GERRIT_VERSIONFILE} written."
+      else
+        echo "Upgrading fail!"
+      fi
     fi
   fi
 fi

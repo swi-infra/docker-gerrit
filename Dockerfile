@@ -14,7 +14,7 @@ ENV GERRIT_INIT_ARGS ""
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
 RUN set -x \
-    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
+    && apk add --update --no-cache git openssh-client openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
 
 RUN mkdir /docker-entrypoint-init.d
 
@@ -42,8 +42,8 @@ RUN /get-plugin.sh metrics-reporter-graphite master-master
 # lfs
 RUN /get-plugin.sh lfs
 
-# oauth2 plugin
-RUN /get-plugin.sh gerrit-oauth-provider v2.14.6.2 davido
+# oauth plugin
+RUN /get-plugin.sh oauth
 
 # importer
 RUN /get-plugin.sh importer
