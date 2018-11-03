@@ -19,12 +19,16 @@ RUN set -x \
 RUN mkdir /docker-entrypoint-init.d
 
 # Download gerrit.war
-RUN curl -fSsL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/lastSuccessfulBuild/artifact/gerrit/bazel-bin/release.war -o $GERRIT_WAR
+ENV JENKINS_URL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/lastSuccessfulBuild/artifact/gerrit/bazel-bin/
+RUN curl -fSsL ${JENKINS_URL}/release.war -o $GERRIT_WAR
 # Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
 # Download Plugins
 COPY get-plugin.sh /
+
+# codemirror-editor
+RUN /get-plugin.sh codemirror-editor
 
 # delete-project
 RUN /get-plugin.sh delete-project master-master
