@@ -27,14 +27,14 @@ RUN curl -fSsL https://gerrit-ci.gerritforge.com/job/Gerrit-${GERRIT_VERSION}/la
 COPY get-plugin.sh /
 
 # delete-project
-RUN /get-plugin.sh delete-project
+RUN /get-plugin.sh delete-project master-master
 
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
 RUN /get-plugin.sh events-log
 
 # gitiles
-RUN /get-plugin.sh gitiles
+RUN /get-plugin.sh gitiles master-master
 
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite master-master
