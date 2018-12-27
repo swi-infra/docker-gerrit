@@ -6,7 +6,7 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION bazel-master
+ENV GERRIT_VERSION bazel-stable-2.16
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -31,20 +31,20 @@ COPY get-plugin.sh /
 RUN /get-plugin.sh codemirror-editor
 
 # delete-project
-RUN /get-plugin.sh delete-project master-master
+RUN /get-plugin.sh delete-project stable-2.16
 
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
-RUN /get-plugin.sh events-log
+RUN /get-plugin.sh events-log stable-2.16
 
 # gitiles
-RUN /get-plugin.sh gitiles master-master
+RUN /get-plugin.sh gitiles master-stable-2.16
 
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite master-master
 
 # lfs
-RUN /get-plugin.sh lfs
+RUN /get-plugin.sh lfs stable-2.16
 
 # oauth plugin
 RUN /get-plugin.sh oauth
