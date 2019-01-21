@@ -6,7 +6,7 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION 2.15.6
+ENV GERRIT_VERSION 2.16.2
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -26,33 +26,36 @@ RUN curl -fSsL https://gerrit-releases.storage.googleapis.com/gerrit-${GERRIT_VE
 # Download Plugins
 COPY get-plugin.sh /
 
+# codemirror-editor
+RUN /get-plugin.sh codemirror-editor
+
 # delete-project
-RUN /get-plugin.sh delete-project stable-2.15
+RUN /get-plugin.sh delete-project stable-2.16
 
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
-RUN /get-plugin.sh events-log stable-2.15
+RUN /get-plugin.sh events-log stable-2.16
 
 # gitiles
-RUN /get-plugin.sh gitiles stable-2.15
+RUN /get-plugin.sh gitiles master-stable-2.16
 
 # metrics-reporter-graphite
-RUN /get-plugin.sh metrics-reporter-graphite master-stable-2.15
+RUN /get-plugin.sh metrics-reporter-graphite master-master
 
 # lfs
-RUN /get-plugin.sh lfs stable-2.15
+RUN /get-plugin.sh lfs stable-2.16
 
 # oauth plugin
-RUN /get-plugin.sh oauth stable-2.15
+RUN /get-plugin.sh oauth
 
 # importer
-RUN /get-plugin.sh importer stable-2.15
+RUN /get-plugin.sh importer
 
 # readonly
-RUN /get-plugin.sh readonly stable-2.15
+RUN /get-plugin.sh readonly
 
 # rabbitmq
-RUN /get-plugin.sh rabbitmq stable-2.15
+RUN /get-plugin.sh rabbitmq
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /

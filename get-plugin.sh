@@ -10,6 +10,11 @@ if [ -z "$PLUGIN" ]; then
 fi
 
 case $PROVIDER in
+    release)
+        curl -fSsL \
+            ${JENKINS_URL}/${PLUGIN}.jar \
+            -o ${GERRIT_HOME}/${PLUGIN}.jar
+        ;;
     gerritforge)
         GERRITFORGE_URL=https://gerrit-ci.gerritforge.com
         GERRITFORGE_BUILD=${3:-"lastSuccessfulBuild"}

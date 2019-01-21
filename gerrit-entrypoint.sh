@@ -485,6 +485,18 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       rm -rf $GERRIT_SITE/cache
     fi
 
+    if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
+      SHOULD_INIT=true
+      echo "Reinit gerrit..."
+    fi
+
+    if [[ "$SHOULD_INIT" == "true" ]]; then
+      if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init -d "${GERRIT_SITE}"; then
+         echo "... failed"
+         exit 1
+      fi
+    fi
+
     if [ ${NEED_REINDEX} -eq 1 ]; then
       if [ -n "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
         echo "Migrating changes from ReviewDB to NoteDB..."

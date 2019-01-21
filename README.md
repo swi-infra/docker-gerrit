@@ -9,8 +9,9 @@
  The branch tags like `2.14.x` or `2.15.x` are used to track the releases of Gerrit. Approved new features will be merged to these branches first then included in the next [release](https://github.com/openfrontier/docker-gerrit/releases).
 
 #### Alpine-based
- * quay.io/swi-infra/gerrit:latest -> 2.15.6
- * quay.io/swi-infra/gerrit:nightly -> master
+ * quay.io/swi-infra/gerrit:latest -> 2.16.2
+ * quay.io/swi-infra/gerrit:nightly -> master branch
+ * quay.io/swi-infra/gerrit:2.16-nightly -> 2.16 branch
  * quay.io/swi-infra/gerrit:2.14.x -> 2.14.7
  * quay.io/swi-infra/gerrit:2.13.x -> 2.13.9
  * quay.io/swi-infra/gerrit:2.12.x -> 2.12.7
