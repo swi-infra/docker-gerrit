@@ -23,6 +23,8 @@ RUN curl -fSsL https://gerrit-releases.storage.googleapis.com/gerrit-${GERRIT_VE
 # Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
+ENV PLUGIN_VERSIONS stable-2.16,master-stable-2.16,master,master-master
+
 # Download Plugins
 COPY get-plugin.sh /
 
@@ -30,23 +32,23 @@ COPY get-plugin.sh /
 RUN /get-plugin.sh codemirror-editor
 
 # delete-project
-RUN /get-plugin.sh delete-project stable-2.16
+RUN /get-plugin.sh delete-project
 
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
-RUN /get-plugin.sh events-log stable-2.16
+RUN /get-plugin.sh events-log
 
 # gitiles
-RUN /get-plugin.sh gitiles master-stable-2.16
+RUN /get-plugin.sh gitiles
 
 # metrics-reporter-graphite
-RUN /get-plugin.sh metrics-reporter-graphite master-master
+RUN /get-plugin.sh metrics-reporter-graphite
 
 # metrics-reporter-prometheus
-RUN /get-plugin.sh metrics-reporter-prometheus stable-2.16
+RUN /get-plugin.sh metrics-reporter-prometheus
 
 # lfs
-RUN /get-plugin.sh lfs stable-2.16
+RUN /get-plugin.sh lfs
 
 # oauth plugin
 RUN /get-plugin.sh oauth
@@ -61,10 +63,10 @@ RUN /get-plugin.sh readonly
 RUN /get-plugin.sh rabbitmq
 
 # admin-console
-RUN /get-plugin.sh admin-console stable-2.16
+RUN /get-plugin.sh admin-console
 
 # healthcheck
-RUN /get-plugin.sh healthcheck stable-2.16
+RUN /get-plugin.sh healthcheck
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
