@@ -42,6 +42,9 @@ RUN /get-plugin.sh gitiles master-stable-2.16
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite master-master
 
+# metrics-reporter-prometheus
+RUN /get-plugin.sh metrics-reporter-prometheus stable-2.16
+
 # lfs
 RUN /get-plugin.sh lfs stable-2.16
 
@@ -56,6 +59,12 @@ RUN /get-plugin.sh readonly
 
 # rabbitmq
 RUN /get-plugin.sh rabbitmq
+
+# admin-console
+RUN /get-plugin.sh admin-console stable-2.16
+
+# healthcheck
+RUN /get-plugin.sh healthcheck stable-2.16
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
