@@ -36,7 +36,7 @@ set_rabbitmq_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/data/rabbitmq/rabbitmq.config" "$@"
 }
 
-first_run=false
+FIRST_RUN=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
   JAVA_MEM_OPTIONS="-Xmx${JAVA_HEAPLIMIT}"
@@ -49,10 +49,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   # Initialize Gerrit if ${GERRIT_SITE}/etc doesn't exist.
   SHOULD_INIT=false
-  if ! [ -e "${GERRIT_SITE}/etc" ]; then
+  if [ ! -e "${GERRIT_SITE}/etc" ] || [ ! -e "${GERRIT_SITE}/bin/gerrit.sh" ]; then
     SHOULD_INIT=true
     echo "First time initialize gerrit..."
-    first_run=true
+    FIRST_RUN=true
   fi
 
   if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
@@ -462,27 +462,27 @@ if [ "$1" = "/gerrit-start.sh" ]; then
           NEED_REINDEX=1
         fi
       fi
-    fi
 
-    if [ ${NEED_REINDEX} -eq 1 ]; then
-      echo "Reindexing..."
-      su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
-      if [ $? -eq 0 ]; then
-        echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
-        su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
-        su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
-        echo "${GERRIT_VERSIONFILE} written."
-      else
-        echo "Upgrading fail!"
+      if [ ${NEED_REINDEX} -eq 1 ]; then
+        echo "Reindexing..."
+        su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
+        if [ $? -eq 0 ]; then
+          echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
+          su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
+          su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
+          echo "${GERRIT_VERSIONFILE} written."
+        else
+          echo "Upgrading fail!"
+        fi
+        NEED_REINDEX=0
       fi
-      NEED_REINDEX=0
-    fi
-  else
-    echo "Something wrong..."
-    cat "${GERRIT_SITE}/logs/error_log"
+    else
+      echo "Something wrong..."
+      cat "${GERRIT_SITE}/logs/error_log" || true
 
-    echo "Emptying cache ..."
-    rm -rf $GERRIT_SITE/cache
+      echo "Emptying cache ..."
+      rm -rf $GERRIT_SITE/cache
+    fi
   fi
 
   if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
@@ -491,7 +491,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
 
   if [[ "$SHOULD_INIT" == "true" ]]; then
-    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init -d "${GERRIT_SITE}"; then
+    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" --no-reindex; then
        echo "... failed"
        exit 1
     fi
