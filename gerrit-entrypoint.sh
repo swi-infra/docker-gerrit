@@ -36,7 +36,7 @@ set_rabbitmq_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/data/rabbitmq/rabbitmq.config" "$@"
 }
 
-first_run=false
+FIRST_RUN=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
   JAVA_MEM_OPTIONS="-Xmx${JAVA_HEAPLIMIT}"
@@ -49,10 +49,10 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   # Initialize Gerrit if ${GERRIT_SITE}/etc doesn't exist.
   SHOULD_INIT=false
-  if ! [ -e "${GERRIT_SITE}/etc" ]; then
+  if [ ! -e "${GERRIT_SITE}/etc" ] || [ ! -e "${GERRIT_SITE}/bin/gerrit.sh" ]; then
     SHOULD_INIT=true
     echo "First time initialize gerrit..."
-    first_run=true
+    FIRST_RUN=true
   fi
 
   if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
@@ -425,19 +425,18 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # docker --link is deprecated. All DB_* environment variables will be replaced by DATABASE_* below.
   [ ${#DATABASE_HOSTNAME} -gt 0 ] && [ ${#DATABASE_PORT} -gt 0 ] && wait_for_database ${DATABASE_HOSTNAME} ${DATABASE_PORT}
 
-  if [[ "${JAVA_SLAVE}" != "true" ]]; then
-
-    # Determine if reindex is necessary
+  # Determine if reindex is necessary
+  NEED_REINDEX=0
+  if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
+    echo "Empty secondary index, reindexing..."
+    NEED_REINDEX=1
+  # MIGRATE_TO_NOTEDB_OFFLINE will override IGNORE_VERSIONCHECK
+  elif [ -n "${IGNORE_VERSIONCHECK}" ] && [ -z "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
+    echo "Don't perform a version check and never do a full reindex"
     NEED_REINDEX=0
-    if [ -z "$(ls -A $GERRIT_SITE/cache)" ]; then
-      echo "Empty secondary index, reindexing..."
-      NEED_REINDEX=1
-    # MIGRATE_TO_NOTEDB_OFFLINE will override IGNORE_VERSIONCHECK
-    elif [ -n "${IGNORE_VERSIONCHECK}" ] && [ -z "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
-      echo "Don't perform a version check and never do a full reindex"
-      NEED_REINDEX=0
-    fi
+  fi
 
+  if [[ "${JAVA_SLAVE}" != "true" ]]; then
     echo "Upgrading gerrit..."
     su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
     if [ $? -eq 0 ]; then
@@ -479,40 +478,40 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       fi
     else
       echo "Something wrong..."
-      cat "${GERRIT_SITE}/logs/error_log"
+      cat "${GERRIT_SITE}/logs/error_log" || true
 
       echo "Emptying cache ..."
       rm -rf $GERRIT_SITE/cache
     fi
+  fi
 
-    if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
-      SHOULD_INIT=true
-      echo "Reinit gerrit..."
+  if [ -e "${GERRIT_SITE}/etc/should_init" ]; then
+    SHOULD_INIT=true
+    echo "Reinit gerrit..."
+  fi
+
+  if [[ "$SHOULD_INIT" == "true" ]]; then
+    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" --no-reindex; then
+       echo "... failed"
+       exit 1
     fi
+  fi
 
-    if [[ "$SHOULD_INIT" == "true" ]]; then
-      if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init -d "${GERRIT_SITE}"; then
-         echo "... failed"
-         exit 1
-      fi
+  if [ ${NEED_REINDEX} -eq 1 ]; then
+    if [ -n "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
+      echo "Migrating changes from ReviewDB to NoteDB..."
+      su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" migrate-to-note-db -d "${GERRIT_SITE}"
+    else
+      echo "Reindexing..."
+      su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
     fi
-
-    if [ ${NEED_REINDEX} -eq 1 ]; then
-      if [ -n "${MIGRATE_TO_NOTEDB_OFFLINE}" ]; then
-        echo "Migrating changes from ReviewDB to NoteDB..."
-        su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" migrate-to-note-db -d "${GERRIT_SITE}"
-      else
-        echo "Reindexing..."
-        su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" reindex --verbose -d "${GERRIT_SITE}"
-      fi
-      if [ $? -eq 0 ]; then
-        echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
-        su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
-        su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
-        echo "${GERRIT_VERSIONFILE} written."
-      else
-        echo "Upgrading fail!"
-      fi
+    if [ $? -eq 0 ]; then
+      echo "Upgrading is OK. Writing versionfile ${GERRIT_VERSIONFILE}"
+      su-exec ${GERRIT_USER} touch "${GERRIT_VERSIONFILE}"
+      su-exec ${GERRIT_USER} echo "${GERRIT_VERSION}" > "${GERRIT_VERSIONFILE}"
+      echo "${GERRIT_VERSIONFILE} written."
+    else
+      echo "Upgrading fail!"
     fi
   fi
 fi
