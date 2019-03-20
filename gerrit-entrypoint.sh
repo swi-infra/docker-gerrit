@@ -144,15 +144,22 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
   [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
+  # Section core
+  [ -z "${CORE_PACKEDGITLIMIT}" ]        || set_gerrit_config core.packedGitLimit "${CORE_PACKEDGITLIMIT}"
+  [ -z "${CORE_PACKEDGITOPENFILES}" ]    || set_gerrit_config core.packedGitOpenFiles "${CORE_PACKEDGITOPENFILES}"
+  [ -z "${CORE_PACKEDGITWINDOWSIZE}" ]   || set_gerrit_config core.packedGitWindowSize "${CORE_PACKEDGITWINDOWSIZE}"
+
   # Section sshd
-  [ -z "${LISTEN_ADDR}" ]             || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
-  [ -z "${SSHD_ADVERTISE_ADDR}" ]     || set_gerrit_config sshd.advertisedAddress "${SSHD_ADVERTISE_ADDR}"
-  [ -z "${SSHD_ENABLE_COMPRESSION}" ] || set_gerrit_config sshd.enableCompression "${SSHD_ENABLE_COMPRESSION}"
-  [ -z "${SSHD_THREADS}" ]            || set_gerrit_config sshd.threads "${SSHD_THREADS}"
-  [ -z "${SSHD_BATCHTHREADS}" ]       || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
-  [ -z "${SSHD_STREAMTHREADS}" ]      || set_gerrit_config sshd.streamThreads "${SSHD_STREAMTHREADS}"
-  [ -z "${SSHD_IDLETIMEOUT}" ]        || set_gerrit_config sshd.idleTimeout "${SSHD_IDLETIMEOUT}"
-  [ -z "${SSHD_WAITTIMEOUT}" ]        || set_gerrit_config sshd.waitTimeout "${SSHD_WAITTIMEOUT}"
+  [ -z "${LISTEN_ADDR}" ]                || set_gerrit_config sshd.listenAddress "${LISTEN_ADDR}"
+  [ -z "${SSHD_ADVERTISE_ADDR}" ]        || set_gerrit_config sshd.advertisedAddress "${SSHD_ADVERTISE_ADDR}"
+  [ -z "${SSHD_ENABLE_COMPRESSION}" ]    || set_gerrit_config sshd.enableCompression "${SSHD_ENABLE_COMPRESSION}"
+  [ -z "${SSHD_THREADS}" ]               || set_gerrit_config sshd.threads "${SSHD_THREADS}"
+  [ -z "${SSHD_BATCHTHREADS}" ]          || set_gerrit_config sshd.batchThreads "${SSHD_BATCHTHREADS}"
+  [ -z "${SSHD_STREAMTHREADS}" ]         || set_gerrit_config sshd.streamThreads "${SSHD_STREAMTHREADS}"
+  [ -z "${SSHD_IDLETIMEOUT}" ]           || set_gerrit_config sshd.idleTimeout "${SSHD_IDLETIMEOUT}"
+  [ -z "${SSHD_WAITTIMEOUT}" ]           || set_gerrit_config sshd.waitTimeout "${SSHD_WAITTIMEOUT}"
+  [ -z "${SSHD_MAXCONNECTIONSPERUSER}" ] || set_gerrit_config sshd.maxConnectionsPerUser "${SSHD_MAXCONNECTIONSPERUSER}"
+  [ -z "${SSHD_COMMANDSTARTTHREADS}" ]   || set_gerrit_config sshd.commandStartThreads "${SSHD_COMMANDSTARTTHREADS}"
 
   # Section transfer
   [ -z "${TRANSFER_TIMEOUT}" ] || set_gerrit_config transfer.timeout "${TRANSFER_TIMEOUT}"
