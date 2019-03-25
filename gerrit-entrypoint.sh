@@ -144,6 +144,13 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
   [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
 
+  # Section cache
+  if [[ "${JAVA_SLAVE}" == "true" ]]; then
+      CACHE_SSHKEYS_MAXAGE=${CACHE_SSHKEYS_MAXAGE:-60s}
+      echo "Setting cache 'sshkeys' maxAge to ${CACHE_SSHKEYS_MAXAGE}"
+  fi
+  [ -z "${CACHE_SSHKEYS_MAXAGE}" ]       || set_gerrit_config cache.sshkeys.maxAge "${CACHE_SSHKEYS_MAXAGE}"
+
   # Section core
   [ -z "${CORE_PACKEDGITLIMIT}" ]        || set_gerrit_config core.packedGitLimit "${CORE_PACKEDGITLIMIT}"
   [ -z "${CORE_PACKEDGITOPENFILES}" ]    || set_gerrit_config core.packedGitOpenFiles "${CORE_PACKEDGITOPENFILES}"
