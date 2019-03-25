@@ -247,7 +247,7 @@
     -d quay.io/swi-infra/gerrit
   ```
 
-## Restricting download schemes  
+## Restricting download schemes
 
   ```shell
     docker run \
