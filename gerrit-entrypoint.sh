@@ -132,7 +132,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
   if [ -n "${DOWNLOAD_COMMANDS}" ]; then
     set_gerrit_config --unset-all download.command || true
-    for s in ${DOWNLOAD_COMMANDS}; do
+    for c in ${DOWNLOAD_COMMANDS}; do
       set_gerrit_config --add download.command ${c}
     done
   fi
