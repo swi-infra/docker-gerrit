@@ -130,6 +130,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       set_gerrit_config --add download.scheme ${s}
     done
   fi
+  if [ -n "${DOWNLOAD_COMMANDS}" ]; then
+    set_gerrit_config --unset-all download.command || true
+    for s in ${DOWNLOAD_COMMANDS}; do
+      set_gerrit_config --add download.command ${c}
+    done
+  fi
 
   # Section message
   [ -z "${MESSAGE_DELIVERYMODE}" ] || set_rabbitmq_config message.deliveryMode "${MESSAGE_DELIVERYMODE}"
