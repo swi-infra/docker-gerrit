@@ -204,6 +204,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${AUTH_HTTP_HEADER}" ]             || set_gerrit_config auth.httpHeader "${AUTH_HTTP_HEADER}"
   [ -z "${AUTH_EMAIL_FORMAT}" ]            || set_gerrit_config auth.emailFormat "${AUTH_EMAIL_FORMAT}"
   [ -z "${AUTH_USER_NAME_TO_LOWER_CASE}" ] || set_gerrit_config auth.userNameToLowerCase "${AUTH_USER_NAME_TO_LOWER_CASE}"
+  [ -z "${AUTH_REGISTER_URL}" ]            || set_gerrit_config auth.registerUrl "${AUTH_REGISTER_URL}"
 
   if [ -z "${AUTH_GIT_BASIC_AUTH_POLICY}" ]; then
     case "${AUTH_TYPE}" in
