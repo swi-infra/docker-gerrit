@@ -11,6 +11,7 @@ fi
 
 get_plugin() {
     local version=$1
+    local artifact_type=$2
 
     local ret=1
     case $PROVIDER in
@@ -23,7 +24,7 @@ get_plugin() {
         gerritforge)
             GERRITFORGE_URL=https://gerrit-ci.gerritforge.com
             GERRITFORGE_BUILD=${3:-"lastSuccessfulBuild"}
-            GERRITFORGE_ARTIFACT_DIR="${GERRITFORGE_BUILD}/artifact/bazel-genfiles/plugins"
+            GERRITFORGE_ARTIFACT_DIR="${GERRITFORGE_BUILD}/artifact/bazel-${artifact_type}/plugins"
             curl -fSsL \
                 ${GERRITFORGE_URL}/job/plugin-${PLUGIN}-bazel-${version}/${GERRITFORGE_ARTIFACT_DIR}/${PLUGIN}/${PLUGIN}.jar \
                 -o ${GERRIT_HOME}/${PLUGIN}.jar
@@ -52,9 +53,11 @@ if [ -n "$VERSION" ]; then
     echo "[${PLUGIN}] Getting $VERSION"
     get_plugin "$VERSION"
 else
-    for version in $(echo "${PLUGIN_VERSIONS}" | tr ',' ' '); do
-        echo "[${PLUGIN}] Trying $version"
-        get_plugin "$version"
+    for artifact_type in bin genfiles; do
+        for version in $(echo "${PLUGIN_VERSIONS}" | tr ',' ' '); do
+            echo "[${PLUGIN}] Trying $version $artifact_type"
+            get_plugin "$version" "$artifact_type"
+        done
     done
 fi
 
