@@ -14,6 +14,14 @@ get_plugin() {
     local artifact_type=$2
 
     local ret=1
+
+    if [[ "$version" == "http"* ]]; then
+        curl -fSsL \
+            "${version}" \
+            -o ${GERRIT_HOME}/${PLUGIN}.jar
+        exit $?
+    fi
+
     case $PROVIDER in
         release)
             curl -fSsL \
