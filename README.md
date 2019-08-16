@@ -9,8 +9,9 @@
  The branch tags like `2.14.x` or `2.15.x` are used to track the releases of Gerrit. Approved new features will be merged to these branches first then included in the next [release](https://github.com/openfrontier/docker-gerrit/releases).
 
 #### Alpine-based
- * quay.io/swi-infra/gerrit:latest -> 2.16.11
+ * quay.io/swi-infra/gerrit:latest -> 3.0.1
  * quay.io/swi-infra/gerrit:nightly -> master branch
+ * quay.io/swi-infra/gerrit:3.0-nightly -> 3.0 branch
  * quay.io/swi-infra/gerrit:2.16-nightly -> 2.16 branch
  * quay.io/swi-infra/gerrit:2.14.x -> 2.14.7
  * quay.io/swi-infra/gerrit:2.13.x -> 2.13.9
@@ -31,7 +32,7 @@
         -v ~/gerrit_volume:/var/gerrit/review_site \
         -p 8080:8080 \
         -p 29418:29418 \
-        -d openfrontier/gerrit
+        -d quay.io/swi-infra/gerrit
   ```
   Online migration of change data is also available via the `NOTEDB_CHANGES_AUTOMIGRATE` environment variable.
 
@@ -41,7 +42,7 @@
         -v ~/gerrit_volume:/var/gerrit/review_site \
         -p 8080:8080 \
         -p 29418:29418 \
-        -d openfrontier/gerrit
+        -d quay.io/swi-infra/gerrit
   ```
   This feature is only available in Gerrit version 2.15 and above.
 
@@ -131,7 +132,7 @@
     -e AUTH_TYPE=LDAP \
     -e LDAP_SERVER=ldap://ldap.server.address \
     -e LDAP_ACCOUNTBASE=<ldap-basedn> \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Run dockerized gerrit with dockerized PostgreSQL and OpenLDAP.
@@ -255,7 +256,7 @@
     -p 8080:8080 \
     -p 29418:29418 \
     -e DOWNLOAD_SCHEMES=http ssh \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Setup DEVELOPMENT_BECOME_ANY_ACCOUNT option

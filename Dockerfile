@@ -6,7 +6,7 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION 2.16.11
+ENV GERRIT_VERSION 3.0.1
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -23,7 +23,7 @@ RUN curl -fSsL https://gerrit-releases.storage.googleapis.com/gerrit-${GERRIT_VE
 # Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
-ENV PLUGIN_VERSIONS stable-2.16,master-stable-2.16,master,master-master
+ENV PLUGIN_VERSIONS stable-3.0,master-stable-3.0,master,master-master
 
 # Download Plugins
 COPY get-plugin.sh /
@@ -31,15 +31,9 @@ COPY get-plugin.sh /
 # codemirror-editor
 RUN /get-plugin.sh codemirror-editor
 
-# delete-project
-RUN /get-plugin.sh delete-project
-
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
 RUN /get-plugin.sh events-log
-
-# gitiles
-RUN /get-plugin.sh gitiles
 
 # metrics-reporter-graphite
 RUN /get-plugin.sh metrics-reporter-graphite
@@ -52,9 +46,6 @@ RUN /get-plugin.sh lfs
 
 # oauth plugin
 RUN /get-plugin.sh oauth
-
-# importer
-RUN /get-plugin.sh importer
 
 # readonly
 RUN /get-plugin.sh readonly
