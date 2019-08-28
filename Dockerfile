@@ -13,6 +13,8 @@ ENV GERRIT_INIT_ARGS ""
 # Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
+ENV CACHE_DATE 2019-09-28
+
 RUN set -x \
     && apk add --update --no-cache git openssh-client openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
 
