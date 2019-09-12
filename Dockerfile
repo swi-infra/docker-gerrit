@@ -72,6 +72,9 @@ RUN /get-plugin.sh healthcheck
 # replication
 RUN /get-plugin.sh replication
 
+# reviewers
+RUN /get-plugin.sh reviewers
+
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
 COPY gerrit-start.sh /
