@@ -9,6 +9,10 @@ set_secure_config() {
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/secure.config" "$@"
 }
 
+set_replication_config() {
+  su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/replication.config" "$@"
+}
+
 wait_for_database() {
   echo "Waiting for database connection $1:$2 ..."
   until nc -z $1 $2; do
@@ -103,7 +107,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Install external plugins
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/delete-project.jar ${GERRIT_SITE}/plugins/delete-project.jar
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/events-log.jar ${GERRIT_SITE}/plugins/events-log.jar
-  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
+  #su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/reviewers.jar ${GERRIT_SITE}/plugins/reviewers.jar
   [ -z "${AMQP_URI}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/rabbitmq.jar ${GERRIT_SITE}/plugins/rabbitmq.jar
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
@@ -163,6 +167,62 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Section exchange
   [ -z "${EXCHANGE_NAME}" ] || set_rabbitmq_config exchange.name "${EXCHANGE_NAME}"
 
+  # Section replication
+  if [ -n "${REPLICATION_REMOTES}" ]; then
+    set_replication_config gerrit.autoReload "true"
+    [ -z "${REPLICATE_ON_STARTUP}" ]    || set_replication_config gerrit.replicateOnStartup "${REPLICATE_ON_STARTUP}"
+    [ -z "${REPLICATION_MAX_RETRIES}" ] || set_replication_config replication.maxRetries "${REPLICATION_MAX_RETRIES}"
+
+    for r in ${REPLICATION_REMOTES}; do
+      URL=`eval      $(echo echo \\$$(echo "${r}_URL"     | awk '{print toupper($0)}'))`
+      MIRROR=`eval   $(echo echo \\$$(echo "${r}_MIRROR"  | awk '{print toupper($0)}'))`
+      PROJECTS=`eval $(echo echo \\$$(echo "${r}_PROJECTS"| awk '{print toupper($0)}'))`
+      TIMEOUT=`eval  $(echo echo \\$$(echo "${r}_TIMEOUT" | awk '{print toupper($0)}'))`
+      THREADS=`eval  $(echo echo \\$$(echo "${r}_THREADS" | awk '{print toupper($0)}'))`
+
+      RESCHEDULE_DELAY=`eval $(echo echo \\$$(echo "${r}_RESCHEDUL_DELAY" | awk '{print toupper($0)}'))`
+
+      REPLICATION_DELAY=`eval       $(echo echo \\$$(echo "${r}_REPLICATION_DELAY"       | awk '{print toupper($0)}'))`
+      REPLICATION_RETRY=`eval       $(echo echo \\$$(echo "${r}_REPLICATION_RETRY"       | awk '{print toupper($0)}'))`
+      REPLICATION_MAX_RETRIES=`eval $(echo echo \\$$(echo "${r}_REPLICATION_MAX_RETRIES" | awk '{print toupper($0)}'))`
+
+      REPLICATE_PERMISSIONS=`eval $(echo echo \\$$(echo "${r}_REPLICATE_PERMISSIONS" | awk '{print toupper($0)}'))`
+
+      CREATE_MISSING_REPOSITORIES=`eval $(echo echo \\$$(echo "${r}_CREATE_MISSING_REPOSITORIES" | awk '{print toupper($0)}'))`
+
+      USERNAME=`eval $(echo echo \\$$(echo "${r}_USERNAME"| awk '{print toupper($0)}'))`
+      PASSWORD=`eval $(echo echo \\$$(echo "${r}_PASSWORD"| awk '{print toupper($0)}'))`
+
+      [ -z "${URL}" ]           || set_replication_config remote.${r}.url "${URL}"
+      [ -z "${MIRROR}" ]           || set_replication_config remote.${r}.mirror "${MIRROR}"
+      [ -z "${TIMEOUT}" ]          || set_replication_config remote.${r}.timeout "${TIMEOUT}"
+      [ -z "${THREADS}" ]          || set_replication_config remote.${r}.threads "${THREADS}"
+      [ -z "${RESCHEDULE_DELAY}" ] || set_replication_config remote.${r}.rescheduleDelay "${RESCHEDULE_DELAY}"
+
+      [ -z "${REPLICATION_DELAY}" ]       || set_replication_config remote.${r}.replicationDelay "${REPLICATION_DELAY}"
+      [ -z "${REPLICATION_RETRY}" ]       || set_replication_config remote.${r}.replicationRetry "${REPLICATION_RETRY}"
+      [ -z "${REPLICATION_MAX_RETRIES}" ] || set_replication_config remote.${r}.replicationMaxRetries "${REPLICATION_MAX_RETRIES}"
+
+      [ -z "${REPLICATE_PERMISSIONS}" ] || set_replication_config remote.${r}.replicatePermissions "${REPLICATE_PERMISSIONS}"
+
+      [ -z "${CREATE_MISSING_REPOSITORIES}" ] || set_replication_config remote.${r}.createMissingRepositories "${CREATE_MISSING_REPOSITORIES}"
+
+      [ -z "${USERNAME}" ] || set_secure_config remote.${r}.username "${USERNAME}"
+      [ -z "${PASSWORD}" ] || set_secure_config remote.${r}.password "${PASSWORD}"
+
+      if ! $(git config -f "${GERRIT_SITE}/etc/replication.config" --get-all remote.${r}.projects > /dev/null); then
+        for p in ${PROJECTS}; do
+          set_replication_config --add remote.${r}.projects "${p}"
+        done
+      fi
+
+      if ! $(git config -f "${GERRIT_SITE}/etc/replication.config" --get-all remote.${r}.push > /dev/null); then
+        set_replication_config --add remote.${r}.push "+refs/heads/*:refs/heads/*"
+        set_replication_config --add remote.${r}.push "+refs/tags/*:refs/tags/*"
+      fi
+    done
+  fi
+
   # Section download
   if [ -n "${DOWNLOAD_SCHEMES}" ]; then
     set_gerrit_config --unset-all download.scheme || true
@@ -185,10 +245,32 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Customize gerrit.config
 
   # Section gerrit
-  [ -z "${WEBURL}" ] || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
-  [ -z "${GITHTTPURL}" ] || set_gerrit_config gerrit.gitHttpUrl "${GITHTTPURL}"
-  [ -z "${UI}" ] || set_gerrit_config gerrit.ui "${UI}"
-  [ -z "${SERVER_ID}" ] || set_gerrit_config gerrit.serverId "${SERVER_ID}"
+  [ -z "${UI}" ]             || set_gerrit_config gerrit.ui "${UI}"
+  [ -z "${GWT_UI}" ]         || set_gerrit_config gerrit.enableGwtUi "${GWT_UI}"
+  [ -z "${WEBURL}" ]         || set_gerrit_config gerrit.canonicalWebUrl "${WEBURL}"
+  [ -z "${GITURL}" ]         || set_gerrit_config gerrit.canonicalGitUrl "${GITURL}"
+  [ -z "${DOCURL}" ]         || set_gerrit_config gerrit.docUrl "${DOCURL}"
+  [ -z "${GITHTTPURL}" ]     || set_gerrit_config gerrit.gitHttpUrl "${GITHTTPURL}"
+  if [ -n "${BUGURL}" ]; then   set_gerrit_config gerrit.reportBugUrl "${BUGURL}"
+    [ -z "${BUGTEXT}" ]      || set_gerrit_config gerrit.reportBugText "${BUGTEXT}"
+  fi
+  [ -z "${SERVER_ID}" ]      || set_gerrit_config gerrit.serverId "${SERVER_ID}"
+  [ -z "${EDIT_GPG}" ]       || set_gerrit_config gerrit.editGpgKeys "${EDIT_GPG}"
+  [ -z "${IFRAME}" ]         || set_gerrit_config gerrit.canLoadInIFrame "${IFRAME}"
+  [ -z "${CDN_PATH}" ]       || set_gerrit_config gerrit.cdnPath "${CDN_PATH}"
+  [ -z "${BASE_PATH}" ]      || set_gerrit_config gerrit.basePath "${BASE_PATH}"
+  [ -z "${FAVICON_PATH}" ]   || set_gerrit_config gerrit.faviconPath "${FAVICON_PATH}"
+  [ -z "${ALL_USERS}" ]      || set_gerrit_config gerrit.allUsers "${ALL_USERS}"
+  [ -z "${ALL_PROJECTS}" ]   || set_gerrit_config gerrit.allProjects "${ALL_PROJECTS}"
+  [ -z "${INSTANCE_NAME}" ]  || set_gerrit_config gerrit.instanceName "${INSTANCE_NAME}"
+  [ -z "${INSTALL_MODULE}" ] || set_gerrit_config gerrit.installModule "${INSTALL_MODULE}"
+
+  [ -z "${SECURE_STORE_CLASS}" ]         || set_gerrit_config gerrit.secureStoreClass "${SECURE_STORE_CLASS}"
+  [ -z "${INSTALL_COMMIT_MSG_HOOK}" ]    || set_gerrit_config gerrit.installCommitMsgHookCommand "${INSTALL_COMMIT_MSG_HOOK}"
+  [ -z "${DISABLE_REVERSE_DNS_LOOKUP}" ] || set_gerrit_config gerrit.disableReverseDnsLookup "$DISABLE_REVERSE_DNS_LOOKUP}"
+
+  [ -z "${PRIMARY_WEBLINK_NAME}" ]     || set_gerrit_config gerrit.primaryWeblinkName "${PRIMARY_WEBLINK_NAME}"
+  [ -z "${LIST_PROJECTS_FROM_INDEX}" ] || set_gerrit_config gerrit.listProjectsFromIndex "${LIST_PROJECTS_FROM_INDEX}"
 
   # Section cache
   if [[ "${JAVA_SLAVE}" == "true" ]]; then

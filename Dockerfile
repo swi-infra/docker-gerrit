@@ -55,7 +55,7 @@ RUN /get-plugin.sh lfs
 RUN /get-plugin.sh oauth
 
 # importer
-RUN /get-plugin.sh importer
+#RUN /get-plugin.sh importer
 
 # readonly
 RUN /get-plugin.sh readonly
