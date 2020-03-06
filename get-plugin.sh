@@ -56,7 +56,7 @@ else
     for artifact_type in bin genfiles; do
         for version in $(echo "${PLUGIN_VERSIONS}" | tr ',' ' '); do
             echo "[${PLUGIN}] Trying $version $artifact_type"
-            get_plugin "$version" "$artifact_type"
+            get_plugin "$version" "$artifact_type" "$4"
         done
     done
 fi
