@@ -6,8 +6,8 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION 2.16.10
-ENV GERRIT_USER gerrit
+ENV GERRIT_VERSION 2.16.17
+ENV GERRIT_USER gerrit2
 ENV GERRIT_INIT_ARGS ""
 
 # Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
@@ -54,7 +54,7 @@ RUN /get-plugin.sh lfs
 RUN /get-plugin.sh oauth https://github.com/CoRfr/gerrit-oauth-provider/releases/download/test-airvantage/oauth.jar
 
 # importer
-RUN /get-plugin.sh importer
+#RUN /get-plugin.sh importer
 
 # readonly
 RUN /get-plugin.sh readonly
@@ -69,7 +69,7 @@ RUN /get-plugin.sh admin-console
 RUN /get-plugin.sh healthcheck
 
 # replication
-RUN /get-plugin.sh replication
+#RUN /get-plugin.sh replication
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
