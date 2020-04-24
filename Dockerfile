@@ -53,9 +53,6 @@ RUN /get-plugin.sh lfs
 # oauth plugin
 RUN /get-plugin.sh oauth https://github.com/CoRfr/gerrit-oauth-provider/releases/download/test-airvantage/oauth.jar
 
-# importer
-#RUN /get-plugin.sh importer
-
 # readonly
 RUN /get-plugin.sh readonly
 
