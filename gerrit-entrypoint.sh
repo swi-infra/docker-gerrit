@@ -109,6 +109,9 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/events-log.jar ${GERRIT_SITE}/plugins/events-log.jar
   #su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/reviewers.jar ${GERRIT_SITE}/plugins/reviewers.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/owners.jar ${GERRIT_SITE}/plugins/owners.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/owners-autoassign.jar ${GERRIT_SITE}/plugins/owners-autoassign.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/find-owners.jar ${GERRIT_SITE}/plugins/find-owners.jar
   [ -z "${AMQP_URI}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/rabbitmq.jar ${GERRIT_SITE}/plugins/rabbitmq.jar
   [ -z "${GRAPHITE_HOST}" ] || su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/metrics-reporter-graphite.jar ${GERRIT_SITE}/plugins/metrics-reporter-graphite.jar
 
