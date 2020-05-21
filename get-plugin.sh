@@ -22,11 +22,15 @@ get_plugin() {
             ret=$?
             ;;
         gerritforge)
+            SUB_PLUGIN=$PLUGIN
+            if [[ $PLUGIN == "owners-autoassign" ]]; then
+                SUB_PLUGIN="owners"
+            fi
             GERRITFORGE_URL=https://gerrit-ci.gerritforge.com
             GERRITFORGE_BUILD=${3:-"lastSuccessfulBuild"}
             GERRITFORGE_ARTIFACT_DIR="${GERRITFORGE_BUILD}/artifact/bazel-${artifact_type}/plugins"
             curl -fSsL \
-                ${GERRITFORGE_URL}/job/plugin-${PLUGIN}-bazel-${version}/${GERRITFORGE_ARTIFACT_DIR}/${PLUGIN}/${PLUGIN}.jar \
+                ${GERRITFORGE_URL}/job/plugin-${SUB_PLUGIN}-bazel-${version}/${GERRITFORGE_ARTIFACT_DIR}/${SUB_PLUGIN}/${PLUGIN}.jar \
                 -o ${GERRIT_HOME}/${PLUGIN}.jar
             ret=$?
             ;;
