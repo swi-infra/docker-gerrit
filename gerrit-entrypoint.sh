@@ -633,7 +633,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
 
   if [[ "$SHOULD_INIT" == "true" ]]; then
-    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" --no-reindex; then
+    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}"; then
        echo "... failed"
        exit 1
     fi
