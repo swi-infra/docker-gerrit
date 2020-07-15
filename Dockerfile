@@ -28,9 +28,6 @@ ENV PLUGIN_VERSIONS stable-3.1,master-stable-3.1,master,master-master
 # Download Plugins
 COPY get-plugin.sh /
 
-# codemirror-editor
-RUN /get-plugin.sh codemirror-editor
-
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
 RUN /get-plugin.sh events-log
@@ -59,8 +56,20 @@ RUN /get-plugin.sh admin-console
 # healthcheck
 RUN /get-plugin.sh healthcheck
 
-# replication
-RUN /get-plugin.sh replication
+# reviewers
+RUN /get-plugin.sh reviewers
+
+# owners
+RUN /get-plugin.sh owners
+
+# owners-autoassign
+RUN /get-plugin.sh owners-autoassign
+
+# find-owners
+RUN /get-plugin.sh find-owners
+
+# audit-sl4j
+RUN /get-plugin.sh audit-sl4j "" gerritforge lastBuild
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /

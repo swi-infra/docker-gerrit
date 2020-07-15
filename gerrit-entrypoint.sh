@@ -138,12 +138,21 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       git clone "${GERRIT_SITE}/git/All-Projects.git" "/tmp/All-Projects"
       cd "/tmp/All-Projects"
       git ls-remote origin
-      META_REF="$(git ls-remote origin | grep -e '/meta$' | tail -1 | awk '{print $2}')"
-      if [ -n "${META_REF}" ]; then
-        git fetch origin "${META_REF}"
-        git checkout FETCH_HEAD
-        SERVER_ID="$(jq -r '.comments[0].serverId' $(ls -1))"
-      fi
+      meta_ref_count=$(git ls-remote origin | grep -e '/meta$' | head -n -1 | wc -l)
+      for i in $(seq 0 $meta_ref_count); do
+        META_REF="$(git ls-remote origin | grep -e '/meta$' | head -n -${i} | tail -1 | awk '{print $2}')"
+        if [ -n "${META_REF}" ]; then
+          git fetch origin "${META_REF}"
+          git checkout FETCH_HEAD
+
+          # If there are no meta files on this META_REF
+          [ "$(ls -1)" ] || continue
+
+          SERVER_ID="$(jq -r '.comments[0].serverId' $(ls -1 | tail -1))"
+
+          [ -n "${SERVER_ID}" ] && break
+        fi
+      done
     fi
   fi
 
@@ -261,6 +270,13 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   [ -z "${PRIMARY_WEBLINK_NAME}" ]     || set_gerrit_config gerrit.primaryWeblinkName "${PRIMARY_WEBLINK_NAME}"
   [ -z "${LIST_PROJECTS_FROM_INDEX}" ] || set_gerrit_config gerrit.listProjectsFromIndex "${LIST_PROJECTS_FROM_INDEX}"
+
+  # Section cache
+  if [[ "${JAVA_SLAVE}" == "true" ]]; then
+      CACHE_SSHKEYS_MAXAGE=${CACHE_SSHKEYS_MAXAGE:-60s}
+      echo "Setting cache 'sshkeys' maxAge to ${CACHE_SSHKEYS_MAXAGE}"
+  fi
+  [ -z "${CACHE_SSHKEYS_MAXAGE}" ]       || set_gerrit_config cache.sshkeys.maxAge "${CACHE_SSHKEYS_MAXAGE}"
 
   # Section core
   [ -z "${CORE_PACKEDGITLIMIT}" ]        || set_gerrit_config core.packedGitLimit "${CORE_PACKEDGITLIMIT}"
