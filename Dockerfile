@@ -30,9 +30,6 @@ ENV PLUGIN_VERSIONS stable-2.16,master-stable-2.16,master,master-master
 # Download Plugins
 COPY get-plugin.sh /
 
-# codemirror-editor
-RUN /get-plugin.sh codemirror-editor
-
 # delete-project
 RUN /get-plugin.sh delete-project
 
