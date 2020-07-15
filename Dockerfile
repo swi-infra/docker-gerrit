@@ -31,9 +31,6 @@ ENV PLUGIN_VERSIONS stable-3.2,master-stable-3.2,master,master-master
 # Download Plugins
 COPY get-plugin.sh /
 
-# codemirror-editor
-RUN /get-plugin.sh codemirror-editor
-
 # events-log
 # This plugin is required by gerrit-trigger plugin of Jenkins.
 RUN /get-plugin.sh events-log
