@@ -1,9 +1,5 @@
 # Gerrit Docker image
 
-[![Docker Stars](https://img.shields.io/docker/stars/openfrontier/gerrit.svg)](https://hub.docker.com/r/openfrontier/gerrit/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/openfrontier/gerrit.svg)](https://hub.docker.com/r/openfrontier/gerrit/)
-[![Docker Automated build](https://img.shields.io/docker/automated/openfrontier/gerrit.svg)](https://hub.docker.com/r/openfrontier/gerrit/)
-
  The Gerrit code review system with external database and OpenLDAP integration.
  This image is based on the openjdk:jre-alpine or the openjdk:jre-slim which makes this image small and fast.
 
@@ -13,7 +9,7 @@
  The branch tags like `2.14.x` or `2.15.x` are used to track the releases of Gerrit. Approved new features will be merged to these branches first then included in the next [release](https://github.com/openfrontier/docker-gerrit/releases).
 
 #### Alpine-based
- * quay.io/swi-infra/gerrit:latest -> 2.16.17
+ * quay.io/swi-infra/gerrit:latest -> 2.16.22
  * quay.io/swi-infra/gerrit:nightly -> master branch
  * quay.io/swi-infra/gerrit:2.16-nightly -> 2.16 branch
 
@@ -36,7 +32,7 @@
         -v ~/gerrit_volume:/var/gerrit/review_site \
         -p 8080:8080 \
         -p 29418:29418 \
-        -d openfrontier/gerrit
+        -d quay.io/swi-infra/gerrit
   ```
   Online migration of change data is also available via the `NOTEDB_CHANGES_AUTOMIGRATE` environment variable.
 
@@ -46,7 +42,7 @@
         -v ~/gerrit_volume:/var/gerrit/review_site \
         -p 8080:8080 \
         -p 29418:29418 \
-        -d openfrontier/gerrit
+        -d quay.io/swi-infra/gerrit
   ```
   This feature is only available in Gerrit version 2.15 and above.
 
@@ -137,7 +133,7 @@
     -e AUTH_TYPE=LDAP \
     -e LDAP_SERVER=ldap://ldap.server.address \
     -e LDAP_ACCOUNTBASE=<ldap-basedn> \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Run dockerized gerrit with dockerized PostgreSQL and OpenLDAP.
@@ -241,7 +237,8 @@
     -e OAUTH_OFFICE365_CLIENT_SECRET=secret123 \
     -d quay.io/swi-infra/gerrit
   ```
-## Setup Replication to multiple remotes 
+
+## Setup Replication to multiple remotes
 
   ```shell
     docker run \
@@ -269,7 +266,7 @@
     -e BITBUCKET_CREATE_MISSING_REPOSITORIES=false \
     -e GITHUB_URL=https://${GH_USER}@github.com/${GH_ORG}/${name}.git \
     -e GITHUB_PASSWORD=${GH_PASSWORD} \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Using gitiles instead of gitweb
@@ -291,7 +288,7 @@
     -p 8080:8080 \
     -p 29418:29418 \
     -e DOWNLOAD_SCHEMES=http ssh \
-    -d openfrontier/gerrit
+    -d quay.io/swi-infra/gerrit
   ```
 
 ## Setup DEVELOPMENT_BECOME_ANY_ACCOUNT option

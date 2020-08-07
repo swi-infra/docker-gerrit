@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 set -xe
 
 set_gerrit_config() {
@@ -38,6 +38,36 @@ set_lfs_config() {
 set_rabbitmq_config() {
   su-exec ${GERRIT_USER} mkdir -p "${GERRIT_SITE}/data/rabbitmq"
   su-exec ${GERRIT_USER} git config -f "${GERRIT_SITE}/data/rabbitmq/rabbitmq.config" "$@"
+}
+
+set_password_env() {
+  local env_name="$1"
+  local cfg="$2"
+
+  set +x
+  local value
+  local env_name_file="${env_name}_FILE"
+  if [ -n "${!env_name}" ]; then
+    value="${!env_name}"
+  elif [ -n "${!env_name_file}" ]; then
+    if [ ! -e "${!env_name_file}" ]; then
+      echo "File '${!env_name_file} doesn't exist"
+      exit 1
+    fi
+
+    value="$(cat "${!env_name_file}")"
+  fi
+
+  if [ -n "$value" ]; then
+    echo "Setting password for ${cfg}"
+    if [[ "$cfg" == "rabbitmq"* ]]; then
+      set_rabbitmq_config "${cfg}" "${value}"
+    else
+      set_secure_config "${cfg}" "${value}"
+    fi
+  fi
+
+  set -x
 }
 
 FIRST_RUN=false
@@ -107,12 +137,21 @@ if [ "$1" = "/gerrit-start.sh" ]; then
       git clone "${GERRIT_SITE}/git/All-Projects.git" "/tmp/All-Projects"
       cd "/tmp/All-Projects"
       git ls-remote origin
-      META_REF="$(git ls-remote origin | grep -e '/meta$' | tail -1 | awk '{print $2}')"
-      if [ -n "${META_REF}" ]; then
-        git fetch origin "${META_REF}"
-        git checkout FETCH_HEAD
-        SERVER_ID="$(jq -r '.comments[0].serverId' $(ls -1))"
-      fi
+      meta_ref_count=$(git ls-remote origin | grep -e '/meta$' | head -n -1 | wc -l)
+      for i in $(seq 0 $meta_ref_count); do
+        META_REF="$(git ls-remote origin | grep -e '/meta$' | head -n -${i} | tail -1 | awk '{print $2}')"
+        if [ -n "${META_REF}" ]; then
+          git fetch origin "${META_REF}"
+          git checkout FETCH_HEAD
+
+          # If there are no meta files on this META_REF
+          [ "$(ls -1)" ] || continue
+
+          SERVER_ID="$(jq -r '.comments[0].serverId' $(ls -1 | tail -1))"
+
+          [ -n "${SERVER_ID}" ] && break
+        fi
+      done
     fi
   fi
 
@@ -121,7 +160,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   # Section amqp
   [ -z "${AMQP_URI}" ] || set_rabbitmq_config amqp.uri "${AMQP_URI}"
   [ -z "${AMQP_USERNAME}" ] || set_rabbitmq_config amqp.username "${AMQP_USERNAME}"
-  [ -z "${AMQP_PASSWORD}" ] || set_rabbitmq_config amqp.password "${AMQP_PASSWORD}"
+  set_password_env AMQP_PASSWORD amqp.password
 
   # Section exchange
   [ -z "${EXCHANGE_NAME}" ] || set_rabbitmq_config exchange.name "${EXCHANGE_NAME}"
@@ -266,7 +305,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   [ -z "${DATABASE_PORT}" ]     || set_gerrit_config database.port     "${DATABASE_PORT}"
   [ -z "${DATABASE_DATABASE}" ] || set_gerrit_config database.database "${DATABASE_DATABASE}"
   [ -z "${DATABASE_USERNAME}" ] || set_gerrit_config database.username "${DATABASE_USERNAME}"
-  [ -z "${DATABASE_PASSWORD}" ] || set_secure_config database.password "${DATABASE_PASSWORD}"
+  set_password_env DATABASE_PASSWORD database.password
   # JDBC URL
   [ -z "${DATABASE_URL}" ] || set_gerrit_config database.url "${DATABASE_URL}"
   # Other database options
@@ -318,7 +357,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     [ -z "${LDAP_SSLVERIFY}" ]                || set_gerrit_config ldap.sslVerify "${LDAP_SSLVERIFY}"
     [ -z "${LDAP_GROUPSVISIBLETOALL}" ]       || set_gerrit_config ldap.groupsVisibleToAll "${LDAP_GROUPSVISIBLETOALL}"
     [ -z "${LDAP_USERNAME}" ]                 || set_gerrit_config ldap.username "${LDAP_USERNAME}"
-    [ -z "${LDAP_PASSWORD}" ]                 || set_secure_config ldap.password "${LDAP_PASSWORD}"
+    set_password_env LDAP_PASSWORD ldap.password
     [ -z "${LDAP_REFERRAL}" ]                 || set_gerrit_config ldap.referral "${LDAP_REFERRAL}"
     [ -z "${LDAP_READTIMEOUT}" ]              || set_gerrit_config ldap.readTimeout "${LDAP_READTIMEOUT}"
     [ -z "${LDAP_ACCOUNTBASE}" ]              || set_gerrit_config ldap.accountBase "${LDAP_ACCOUNTBASE}"
