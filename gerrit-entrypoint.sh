@@ -94,6 +94,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
     echo "Reinit gerrit..."
   fi
 
+  if [[ -n "$GERRIT_CORE_PLUGINS" ]]; then
+    for CORE_PLUGIN in $GERRIT_CORE_PLUGINS; do
+      GERRIT_INIT_ARGS+=" --install-plugin=$CORE_PLUGIN"
+    done
+  fi
+
   if [[ "$SHOULD_INIT" == "true" ]]; then
     if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
        echo "... failed, retrying"
@@ -105,6 +111,12 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
 
   # Install external plugins
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/reviewers.jar ${GERRIT_SITE}/plugins/reviewers.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/owners.jar ${GERRIT_SITE}/plugins/owners.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/owners-autoassign.jar ${GERRIT_SITE}/plugins/owners-autoassign.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/find-owners.jar ${GERRIT_SITE}/plugins/find-owners.jar
+  su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/admin-console.jar ${GERRIT_SITE}/plugins/admin-console.jar
+
   # The importer plugin is not ready for 3.0.0 yet.
   su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/events-log.jar ${GERRIT_SITE}/plugins/events-log.jar
   #su-exec ${GERRIT_USER} cp -f ${GERRIT_HOME}/importer.jar ${GERRIT_SITE}/plugins/importer.jar

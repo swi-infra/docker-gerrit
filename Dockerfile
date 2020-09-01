@@ -9,6 +9,14 @@ ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
 ENV GERRIT_VERSION 3.2.2
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
+ENV GERRIT_CORE_PLUGINS "hooks \
+                         delete-project \
+                         commit-message-length-validator \
+                         reviewnotes \
+                         replication \
+                         download-commands \
+                         singleusergroup \
+                         codemirror-editor"
 
 # Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
