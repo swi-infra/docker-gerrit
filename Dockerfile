@@ -59,9 +59,6 @@ RUN /get-plugin.sh admin-console
 # healthcheck
 RUN /get-plugin.sh healthcheck
 
-# replication
-RUN /get-plugin.sh replication
-
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
 COPY gerrit-start.sh /
