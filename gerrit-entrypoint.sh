@@ -70,6 +70,15 @@ set_password_env() {
   set -x
 }
 
+debug_mode() {
+    if [ -n "$DEBUG_GERRIT" ]; then
+        echo "Debug mode, staying alive"
+        tail -f /dev/null
+    fi
+}
+
+trap debug_mode EXIT
+
 FIRST_RUN=false
 
 if [ -n "${JAVA_HEAPLIMIT}" ]; then
