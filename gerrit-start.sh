@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 
+set -x
 set +e
 
 echo "Starting Gerrit..."
-exec su-exec ${GERRIT_USER} ${GERRIT_SITE}/bin/gerrit.sh ${GERRIT_START_ACTION:-daemon}
+su-exec ${GERRIT_USER} ${GERRIT_SITE}/bin/gerrit.sh ${GERRIT_START_ACTION:-daemon}
 RET=$?
 
 echo "Exit $RET"
