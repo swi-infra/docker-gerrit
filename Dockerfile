@@ -6,14 +6,14 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION bazel-stable-3.0
+ENV GERRIT_VERSION bazel-stable-3.2
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
 # Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
-ENV CACHE_DATE 2019-09-28
+ENV CACHE_DATE 2020-09-06
 
 RUN set -x \
     && apk add --update --no-cache git openssh-client openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
@@ -26,7 +26,7 @@ RUN curl -fSsL ${JENKINS_URL}/release.war -o $GERRIT_WAR
 # Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
-ENV PLUGIN_VERSIONS stable-3.0,master-stable-3.0,master,master-master
+ENV PLUGIN_VERSIONS stable-3.2,master-stable-3.2,master,master-master
 
 # Download Plugins
 COPY get-plugin.sh /
