@@ -59,6 +59,21 @@ RUN /get-plugin.sh admin-console
 # healthcheck
 RUN /get-plugin.sh healthcheck
 
+# reviewers
+RUN /get-plugin.sh reviewers
+
+# owners
+RUN /get-plugin.sh owners
+
+# owners-autoassign
+RUN /get-plugin.sh owners-autoassign
+
+# find-owners
+RUN /get-plugin.sh find-owners
+
+# audit-sl4j
+RUN /get-plugin.sh audit-sl4j "" gerritforge lastBuild
+
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
 COPY gerrit-start.sh /
