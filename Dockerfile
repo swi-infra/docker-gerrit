@@ -7,7 +7,7 @@ ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
 ENV GERRIT_VERSION bazel-stable-3.2
-ENV GERRIT_UPDATE 2020-09-06
+ENV GERRIT_UPDATE 2020-09-22
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -69,6 +69,9 @@ RUN /get-plugin.sh owners-autoassign
 
 # find-owners
 RUN /get-plugin.sh find-owners
+
+# checks
+RUN /get-plugin.sh checks
 
 # audit-sl4j
 RUN /get-plugin.sh audit-sl4j "" gerritforge lastBuild
