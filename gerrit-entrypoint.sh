@@ -592,7 +592,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   if [[ "${JAVA_SLAVE}" != "true" ]]; then
     echo "Upgrading gerrit..."
-    su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
+    su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}
     if [ $? -eq 0 ]; then
       GERRIT_VERSIONFILE="${GERRIT_SITE}/gerrit_version"
 
@@ -645,7 +645,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
   fi
 
   if [[ "$SHOULD_INIT" == "true" ]]; then
-    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch -d "${GERRIT_SITE}" --no-reindex; then
+    if ! su-exec ${GERRIT_USER} java ${JAVA_OPTIONS} ${JAVA_MEM_OPTIONS} -jar "${GERRIT_WAR}" init --batch --no-auto-start -d "${GERRIT_SITE}" ${GERRIT_INIT_ARGS}; then
        echo "... failed"
        exit 1
     fi
