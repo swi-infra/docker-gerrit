@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM adoptopenjdk/openjdk11:alpine-jre
 
 MAINTAINER zsx <thinkernel@gmail.com>
 
@@ -6,8 +6,8 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION bazel-stable-3.2
-ENV GERRIT_UPDATE 2020-10-21
+ENV GERRIT_VERSION bazel-java11-stable-3.3
+ENV GERRIT_UPDATE 2020-12-08
 ENV GERRIT_USER gerrit
 ENV GERRIT_INIT_ARGS ""
 
@@ -15,7 +15,7 @@ ENV GERRIT_INIT_ARGS ""
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
 RUN set -x \
-    && apk add --update --no-cache git openssh-client openssl bash perl perl-cgi git-gitweb curl su-exec procmail jq
+    && apk add --update --no-cache git openssh-client openssl bash perl perl-cgi git-gitweb curl su-exec jq
 
 RUN mkdir /docker-entrypoint-init.d
 
@@ -25,7 +25,7 @@ RUN curl -fSsL ${JENKINS_URL}/release.war -o $GERRIT_WAR
 # Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
-ENV PLUGIN_VERSIONS stable-3.2,master-stable-3.2,master,master-master
+ENV PLUGIN_VERSIONS stable-3.3,master-stable-3.3,master,master-master
 
 # Download Plugins
 COPY get-plugin.sh /
