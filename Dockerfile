@@ -76,6 +76,9 @@ RUN /get-plugin.sh checks
 # audit-sl4j
 RUN /get-plugin.sh audit-sl4j
 
+# avatars-external
+RUN /get-plugin.sh avatars-external
+
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
 COPY gerrit-start.sh /
