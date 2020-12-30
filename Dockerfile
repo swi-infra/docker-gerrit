@@ -71,7 +71,7 @@ RUN /get-plugin.sh owners-autoassign
 RUN /get-plugin.sh checks
 
 # audit-sl4j
-RUN /get-plugin.sh audit-sl4j "" gerritforge lastBuild
+RUN /get-plugin.sh audit-sl4j
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
