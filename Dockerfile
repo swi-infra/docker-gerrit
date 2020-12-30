@@ -67,6 +67,9 @@ RUN /get-plugin.sh owners
 # owners-autoassign
 RUN /get-plugin.sh owners-autoassign
 
+# find-owners
+RUN /get-plugin.sh find-owners
+
 # checks
 RUN /get-plugin.sh checks
 
